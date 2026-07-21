@@ -1,145 +1,98 @@
 "use client";
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 type Material = {
   id: number;
   title: string;
   description: string | null;
-  grade: string;
   subject: string;
   type: string;
   url: string;
   createdAt: string;
 };
 
-const TYPE_ICONS: Record<string, string> = {
-  pdf: "📄",
-  video: "▶️",
-  note: "📝",
-  link: "🔗",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  pdf: "PDF",
-  video: "فيديو",
-  note: "ملاحظات",
-  link: "رابط",
-};
+const TYPE_ICONS: Record<string, string> = { pdf: "📄", video: "▶️", note: "📝", link: "🔗" };
+const TYPE_LABELS: Record<string, string> = { pdf: "PDF", video: "فيديو", note: "ملاحظات", link: "رابط" };
 
 export default function MaterialsPage() {
   const [items, setItems] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const [grade, setGrade] = useState("الكل");
-  const [type, setType] = useState("الكل");
+  const [subject, setSubject] = useState("الكل");
 
   useEffect(() => {
-    fetch("/api/materials")
-      .then((r) => r.json())
-      .then(setItems)
-      .finally(() => setLoading(false));
+    fetch("/api/materials").then(r => r.json()).then(setItems).finally(() => setLoading(false));
   }, []);
 
-  const grades = ["الكل", ...Array.from(new Set(items.map((i) => i.grade)))];
-  const types = ["الكل", ...Array.from(new Set(items.map((i) => i.type)))];
-
-  const filtered = items.filter(
-    (i) => (grade === "الكل" || i.grade === grade) && (type === "الكل" || i.type === type)
-  );
+  const subjects = ["الكل", ...Array.from(new Set(items.map(i => i.subject)))];
+  const filtered = subject === "الكل" ? items : items.filter(i => i.subject === subject);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className="flex flex-col min-h-screen page-bottom">
+      <Header title="المواد" />
 
-      <div className="bg-gradient-to-br from-[#1a3a6b] to-[#0d2347] text-white py-12 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-black mb-2">📚 المواد التعليمية</h1>
-          <p className="text-white/70">مذكرات ومقاطع فيديو وملفات PDF منظمة لك</p>
+      <div className="bg-gradient-to-b from-[#1a3a6b] to-[#1e4080] text-white px-4 py-8">
+        <div className="max-w-lg mx-auto">
+          <h1 className="text-2xl font-black">📚 المواد التعليمية</h1>
+          <p className="text-white/60 text-sm mt-1">ملفات ومقاطع ومحاضرات</p>
         </div>
       </div>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-8">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500 font-semibold">الصف:</span>
-            <div className="flex flex-wrap gap-2">
-              {grades.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setGrade(g)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-                    grade === g ? "bg-[#1a3a6b] text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-[#1a3a6b]"
-                  }`}
-                >
-                  {g}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500 font-semibold">النوع:</span>
-            <div className="flex flex-wrap gap-2">
-              {types.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setType(t)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-                    type === t ? "bg-[#d4a017] text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-[#d4a017]"
-                  }`}
-                >
-                  {t === "الكل" ? t : (TYPE_LABELS[t] || t)}
-                </button>
-              ))}
-            </div>
-          </div>
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 py-5">
+        {/* Subject filter */}
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-3 mb-4" dir="ltr">
+          {subjects.map(s => (
+            <button
+              key={s}
+              onClick={() => setSubject(s)}
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                subject === s ? "bg-[#1a3a6b] text-white" : "bg-white border border-gray-200 text-gray-600"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-gray-400">جاري التحميل...</div>
+          <div className="text-center py-20 text-gray-400 text-sm">جاري التحميل...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 space-y-3">
             <div className="text-5xl">📭</div>
-            <p className="text-gray-400">لا توجد مواد بعد</p>
+            <p className="text-gray-400 text-sm">لا توجد مواد بعد</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="space-y-3">
             {filtered.map((item) => (
               <a
                 key={item.id}
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md p-5 flex flex-col gap-3 transition-all hover:-translate-y-1 group"
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4 active:scale-[0.98] transition-all"
               >
-                <div className="flex items-start justify-between">
-                  <span className="text-3xl">{TYPE_ICONS[item.type] || "🔗"}</span>
-                  <span className="text-xs bg-[#f0f4ff] text-[#1a3a6b] font-semibold px-2.5 py-1 rounded-full">
-                    {item.grade}
-                  </span>
+                <div className="w-12 h-12 rounded-xl bg-[#f0f4ff] flex items-center justify-center text-2xl shrink-0">
+                  {TYPE_ICONS[item.type] || "🔗"}
                 </div>
-                <div>
-                  <h3 className="font-bold text-[#1a3a6b] group-hover:text-[#d4a017] transition-colors line-clamp-2">
-                    {item.title}
-                  </h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-[#1a3a6b] text-sm leading-tight line-clamp-2">{item.title}</h3>
                   {item.description && (
-                    <p className="text-gray-500 text-sm mt-1 line-clamp-2">{item.description}</p>
+                    <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">{item.description}</p>
                   )}
+                  <div className="flex gap-2 mt-1.5">
+                    <span className="text-xs text-[#1a3a6b] font-semibold">{item.subject}</span>
+                    <span className="text-gray-300">·</span>
+                    <span className="text-xs text-gray-400">{TYPE_LABELS[item.type] || item.type}</span>
+                  </div>
                 </div>
-                <div className="mt-auto flex items-center justify-between">
-                  <span className="text-xs text-gray-400">{item.subject}</span>
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                    {TYPE_LABELS[item.type] || item.type}
-                  </span>
-                </div>
+                <svg className="w-5 h-5 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
               </a>
             ))}
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

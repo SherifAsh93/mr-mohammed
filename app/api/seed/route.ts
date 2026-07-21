@@ -18,7 +18,6 @@ export async function GET() {
         id SERIAL PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         description TEXT,
-        grade VARCHAR(100) NOT NULL,
         subject VARCHAR(100) NOT NULL,
         type VARCHAR(50) NOT NULL DEFAULT 'link',
         url TEXT NOT NULL,
@@ -30,7 +29,6 @@ export async function GET() {
         id SERIAL PRIMARY KEY,
         student_name VARCHAR(255) NOT NULL,
         student_code VARCHAR(50),
-        grade VARCHAR(100) NOT NULL,
         subject VARCHAR(100) NOT NULL,
         exam_name VARCHAR(255) NOT NULL,
         score DECIMAL(5,2) NOT NULL,
@@ -39,17 +37,35 @@ export async function GET() {
       )
     `);
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS mrm_schedule (
+      CREATE TABLE IF NOT EXISTS mrm_courses (
         id SERIAL PRIMARY KEY,
-        day VARCHAR(20) NOT NULL,
-        start_time VARCHAR(10) NOT NULL,
-        end_time VARCHAR(10) NOT NULL,
-        grade VARCHAR(100) NOT NULL,
-        group_name VARCHAR(100),
-        location VARCHAR(150),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        subject VARCHAR(100) NOT NULL,
+        schedule_text VARCHAR(255),
+        status VARCHAR(20) NOT NULL DEFAULT 'open',
+        max_students INTEGER DEFAULT 0,
+        meeting_link TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS mrm_enrollments (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER NOT NULL,
+        student_name VARCHAR(255) NOT NULL,
+        student_phone VARCHAR(30) NOT NULL,
+        student_email VARCHAR(255),
+        status VARCHAR(20) NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Migrate: drop grade column from materials/results if it exists
+    await db.execute(sql`ALTER TABLE mrm_materials DROP COLUMN IF EXISTS grade`);
+    await db.execute(sql`ALTER TABLE mrm_results DROP COLUMN IF EXISTS grade`);
+    // Drop old schedule table
+    await db.execute(sql`DROP TABLE IF EXISTS mrm_schedule`);
 
     const existing = await db.select().from(adminSettings).limit(1);
     if (!existing.length) {

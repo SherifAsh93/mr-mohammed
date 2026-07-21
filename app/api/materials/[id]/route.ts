@@ -7,8 +7,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    const { title, description, grade, subject, type, url } = body;
-    await db.update(materials).set({ title, description, grade, subject, type, url }).where(eq(materials.id, Number(id)));
+    const { title, description, subject, type, url } = body;
+    await db.update(materials).set({ title, description, subject, type, url }).where(eq(materials.id, Number(id)));
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false }, { status: 500 });

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { schedule } from "@/db/schema";
+import { enrollments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const body = await req.json();
-    const { day, startTime, endTime, grade, groupName, location } = body;
-    await db.update(schedule).set({ day, startTime, endTime, grade, groupName, location }).where(eq(schedule.id, Number(id)));
+    const { status } = await req.json();
+    await db.update(enrollments).set({ status }).where(eq(enrollments.id, Number(id)));
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false }, { status: 500 });
@@ -18,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await db.delete(schedule).where(eq(schedule.id, Number(id)));
+    await db.delete(enrollments).where(eq(enrollments.id, Number(id)));
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false }, { status: 500 });

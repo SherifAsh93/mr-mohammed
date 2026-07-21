@@ -10,7 +10,6 @@ export const materials = pgTable("mrm_materials", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  grade: varchar("grade", { length: 100 }).notNull(),
   subject: varchar("subject", { length: 100 }).notNull(),
   type: varchar("type", { length: 50 }).notNull().default("link"),
   url: text("url").notNull(),
@@ -21,7 +20,6 @@ export const results = pgTable("mrm_results", {
   id: serial("id").primaryKey(),
   studentName: varchar("student_name", { length: 255 }).notNull(),
   studentCode: varchar("student_code", { length: 50 }),
-  grade: varchar("grade", { length: 100 }).notNull(),
   subject: varchar("subject", { length: 100 }).notNull(),
   examName: varchar("exam_name", { length: 255 }).notNull(),
   score: decimal("score", { precision: 5, scale: 2 }).notNull(),
@@ -29,13 +27,24 @@ export const results = pgTable("mrm_results", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const schedule = pgTable("mrm_schedule", {
+export const courses = pgTable("mrm_courses", {
   id: serial("id").primaryKey(),
-  day: varchar("day", { length: 20 }).notNull(),
-  startTime: varchar("start_time", { length: 10 }).notNull(),
-  endTime: varchar("end_time", { length: 10 }).notNull(),
-  grade: varchar("grade", { length: 100 }).notNull(),
-  groupName: varchar("group_name", { length: 100 }),
-  location: varchar("location", { length: 150 }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  subject: varchar("subject", { length: 100 }).notNull(),
+  scheduleText: varchar("schedule_text", { length: 255 }),
+  status: varchar("status", { length: 20 }).notNull().default("open"),
+  maxStudents: integer("max_students").default(0),
+  meetingLink: text("meeting_link"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const enrollments = pgTable("mrm_enrollments", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull(),
+  studentName: varchar("student_name", { length: 255 }).notNull(),
+  studentPhone: varchar("student_phone", { length: 30 }).notNull(),
+  studentEmail: varchar("student_email", { length: 255 }),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow(),
 });

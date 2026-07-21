@@ -15,11 +15,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, description, grade, subject, type, url } = body;
-    if (!title || !grade || !subject || !url) {
+    const { title, description, subject, type, url } = body;
+    if (!title || !subject || !url) {
       return NextResponse.json({ ok: false, error: "بيانات ناقصة" }, { status: 400 });
     }
-    const [row] = await db.insert(materials).values({ title, description, grade, subject, type: type || "link", url }).returning();
+    const [row] = await db.insert(materials).values({ title, description, subject, type: type || "link", url }).returning();
     return NextResponse.json({ ok: true, data: row });
   } catch {
     return NextResponse.json({ ok: false, error: "حدث خطأ" }, { status: 500 });

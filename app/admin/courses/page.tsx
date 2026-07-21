@@ -1,0 +1,154 @@
+"use client";
+import { useEffect, useState } from "react";
+
+type Course = { id: number; title: string; description: string | null; subject: string; scheduleText: string | null; status: string; maxStudents: number | null; meetingLink: string | null; };
+
+const EMPTY = { title: "", description: "", subject: "اللغة العربية", scheduleText: "", status: "open", maxStudents: "", meetingLink: "" };
+const SUBJECTS = ["اللغة العربية", "التربية الإسلامية", "التجويد وعلوم القرآن", "النحو والصرف", "أخرى"];
+const STATUSES = [{ value: "open", label: "مفتوح للتسجيل" }, { value: "upcoming", label: "قادم قريبًا" }, { value: "closed", label: "مكتمل / مغلق" }];
+
+export default function AdminCourses() {
+  const [items, setItems] = useState<Course[]>([]);
+  const [form, setForm] = useState(EMPTY);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  function load() { fetch("/api/courses").then(r => r.json()).then(setItems); }
+  useEffect(() => { load(); }, []);
+
+  function openAdd() { setForm(EMPTY); setEditId(null); setShowForm(true); setMsg(""); }
+  function openEdit(c: Course) {
+    setForm({ title: c.title, description: c.description || "", subject: c.subject, scheduleText: c.scheduleText || "", status: c.status, maxStudents: String(c.maxStudents || ""), meetingLink: c.meetingLink || "" });
+    setEditId(c.id); setShowForm(true); setMsg("");
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault(); setLoading(true); setMsg("");
+    try {
+      const method = editId ? "PUT" : "POST";
+      const url = editId ? `/api/courses/${editId}` : "/api/courses";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, maxStudents: form.maxStudents ? Number(form.maxStudents) : 0 }) });
+      const data = await res.json();
+      if (data.ok) { setMsg(editId ? "تم التعديل ✓" : "تمت الإضافة ✓"); setShowForm(false); load(); }
+      else setMsg(data.error || "حدث خطأ");
+    } finally { setLoading(false); }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("حذف الدورة؟ سيتم حذف كل التسجيلات المرتبطة بها.")) return;
+    await fetch(`/api/courses/${id}`, { method: "DELETE" }); load();
+  }
+
+  const statusLabel = (s: string) => STATUSES.find(x => x.value === s)?.label || s;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-black text-[#1a3a6b]">🎓 الدورات</h1>
+        <button onClick={openAdd} className="bg-[#1a3a6b] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#122a52] transition-colors">+ دورة جديدة</button>
+      </div>
+
+      {msg && <p className={`text-sm font-semibold ${msg.includes("✓") ? "text-green-600" : "text-red-500"}`}>{msg}</p>}
+
+      {showForm && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h2 className="font-bold text-[#1a3a6b] mb-4">{editId ? "تعديل الدورة" : "دورة جديدة"}</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">عنوان الدورة *</label>
+              <input required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                placeholder="مثال: دورة النحو الأساسية" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">وصف الدورة</label>
+              <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+                rows={3} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] resize-none"
+                placeholder="اشرح ما سيتعلمه الطالب..." />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">المادة *</label>
+                <select required value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-white">
+                  {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">الحالة</label>
+                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-white">
+                  {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">الموعد (نص حر)</label>
+                <input value={form.scheduleText} onChange={e => setForm({ ...form, scheduleText: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                  placeholder="مثال: السبت 8 مساءً" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-1">عدد الطلاب (0 = غير محدد)</label>
+                <input type="number" min="0" value={form.maxStudents} onChange={e => setForm({ ...form, maxStudents: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                  placeholder="20" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">رابط الاجتماع (Teams / Meet / Zoom)</label>
+              <input value={form.meetingLink} onChange={e => setForm({ ...form, meetingLink: e.target.value })}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                placeholder="https://teams.microsoft.com/..." dir="ltr" />
+              <p className="text-gray-400 text-xs mt-1">هذا الرابط لا يظهر للطلاب — أرسله لهم يدويًا عبر واتساب</p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button type="submit" disabled={loading}
+                className="bg-[#1a3a6b] text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-[#122a52] transition-colors disabled:opacity-60">
+                {loading ? "جاري الحفظ..." : editId ? "حفظ التعديلات" : "إضافة الدورة"}
+              </button>
+              <button type="button" onClick={() => setShowForm(false)}
+                className="bg-gray-100 text-gray-600 px-6 py-3 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center text-gray-400 text-sm">لا توجد دورات بعد.</div>
+      ) : (
+        <div className="space-y-3">
+          {items.map(c => (
+            <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-[#1a3a6b] text-sm">{c.title}</h3>
+                  <p className="text-gray-400 text-xs mt-0.5">{c.subject} {c.scheduleText ? `· ${c.scheduleText}` : ""}</p>
+                </div>
+                <span className={`text-xs font-bold px-2 py-1 rounded-full shrink-0 ${
+                  c.status === "open" ? "bg-green-100 text-green-700" :
+                  c.status === "upcoming" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
+                }`}>{statusLabel(c.status)}</span>
+              </div>
+              {c.meetingLink && (
+                <a href={c.meetingLink} target="_blank" rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                  🔗 رابط الاجتماع
+                </a>
+              )}
+              <div className="flex gap-3 mt-3">
+                <button onClick={() => openEdit(c)} className="text-[#1a3a6b] text-xs font-bold hover:underline">تعديل</button>
+                <button onClick={() => handleDelete(c.id)} className="text-red-500 text-xs font-bold hover:underline">حذف</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

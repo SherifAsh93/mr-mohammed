@@ -8,9 +8,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q")?.trim();
     if (q) {
-      const rows = await db
-        .select()
-        .from(results)
+      const rows = await db.select().from(results)
         .where(or(ilike(results.studentName, `%${q}%`), ilike(results.studentCode, `%${q}%`)))
         .orderBy(desc(results.createdAt));
       return NextResponse.json(rows);
@@ -25,14 +23,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { studentName, studentCode, grade, subject, examName, score, maxScore } = body;
-    if (!studentName || !grade || !subject || !examName || score === undefined) {
+    const { studentName, studentCode, subject, examName, score, maxScore } = body;
+    if (!studentName || !subject || !examName || score === undefined) {
       return NextResponse.json({ ok: false, error: "بيانات ناقصة" }, { status: 400 });
     }
-    const [row] = await db
-      .insert(results)
-      .values({ studentName, studentCode, grade, subject, examName, score: String(score), maxScore: String(maxScore || 100) })
-      .returning();
+    const [row] = await db.insert(results).values({
+      studentName, studentCode, subject, examName,
+      score: String(score), maxScore: String(maxScore || 100),
+    }).returning();
     return NextResponse.json({ ok: true, data: row });
   } catch {
     return NextResponse.json({ ok: false, error: "حدث خطأ" }, { status: 500 });
