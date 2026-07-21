@@ -68,6 +68,20 @@ export async function GET() {
     await db.execute(sql`DROP TABLE IF EXISTS mrm_schedule`);
     // Add payment_ref column to enrollments if it doesn't exist
     await db.execute(sql`ALTER TABLE mrm_enrollments ADD COLUMN IF NOT EXISTS payment_ref VARCHAR(100)`);
+    // Add price column to courses if it doesn't exist
+    await db.execute(sql`ALTER TABLE mrm_courses ADD COLUMN IF NOT EXISTS price DECIMAL(10,2)`);
+    // Drop old meeting_link column from courses (replaced by sessions)
+    await db.execute(sql`ALTER TABLE mrm_courses DROP COLUMN IF EXISTS meeting_link`);
+    // Create sessions table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS mrm_sessions (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        meeting_link TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
 
     const existing = await db.select().from(adminSettings).limit(1);
     if (!existing.length) {

@@ -35,7 +35,15 @@ export const courses = pgTable("mrm_courses", {
   scheduleText: varchar("schedule_text", { length: 255 }),
   status: varchar("status", { length: 20 }).notNull().default("open"),
   maxStudents: integer("max_students").default(0),
-  meetingLink: text("meeting_link"),
+  price: decimal("price", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const sessions = pgTable("mrm_sessions", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  meetingLink: text("meeting_link").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

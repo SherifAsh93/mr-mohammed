@@ -10,6 +10,7 @@ type Course = {
   scheduleText: string | null;
   status: string;
   maxStudents: number | null;
+  price: string | null;
   createdAt: string;
 };
 
@@ -116,6 +117,11 @@ export default function CoursesPage() {
                         👥 حتى {c.maxStudents} طالب
                       </span>
                     ) : null}
+                    {c.price && (
+                      <span className="text-xs font-bold text-[#c9860a] bg-amber-50 px-2.5 py-1 rounded-full">
+                        💰 {Number(c.price).toLocaleString("ar-EG")} جنيه
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -216,8 +222,13 @@ export default function CoursesPage() {
                       <span className="text-xl">💳</span>
                       <p className="font-black text-red-700 text-sm">الدفع عبر فودافون كاش</p>
                     </div>
+                    {enrollCourse?.price && (
+                      <p className="text-center font-black text-red-800 text-2xl">
+                        {Number(enrollCourse.price).toLocaleString("ar-EG")} جنيه
+                      </p>
+                    )}
                     <p className="text-red-600 text-sm">
-                      حوّل رسوم الاشتراك على رقم فودافون كاش:
+                      {enrollCourse?.price ? "حوّل المبلغ على رقم فودافون كاش:" : "حوّل رسوم الاشتراك على رقم فودافون كاش:"}
                     </p>
                     <p className="font-black text-red-800 text-lg tracking-widest text-center py-1" dir="ltr">
                       01007050667

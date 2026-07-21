@@ -7,9 +7,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const body = await req.json();
-    const { title, description, subject, scheduleText, status, maxStudents, meetingLink } = body;
-    await db.update(courses).set({ title, description, subject, scheduleText, status, maxStudents, meetingLink })
-      .where(eq(courses.id, Number(id)));
+    const { title, description, subject, scheduleText, status, maxStudents, price } = body;
+    await db.update(courses).set({
+      title, description, subject, scheduleText, status, maxStudents,
+      price: price ? String(price) : null,
+    }).where(eq(courses.id, Number(id)));
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ ok: false }, { status: 500 });

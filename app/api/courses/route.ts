@@ -15,13 +15,13 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, description, subject, scheduleText, status, maxStudents, meetingLink } = body;
+    const { title, description, subject, scheduleText, status, maxStudents, price } = body;
     if (!title || !subject) return NextResponse.json({ ok: false, error: "بيانات ناقصة" }, { status: 400 });
     const [row] = await db.insert(courses).values({
       title, description, subject,
       scheduleText, status: status || "open",
       maxStudents: maxStudents || 0,
-      meetingLink,
+      price: price ? String(price) : null,
     }).returning();
     return NextResponse.json({ ok: true, data: row });
   } catch {
