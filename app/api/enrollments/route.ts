@@ -24,12 +24,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { courseId, studentName, studentPhone, studentEmail } = body;
+    const { courseId, studentName, studentPhone, studentEmail, paymentRef } = body;
     if (!courseId || !studentName || !studentPhone) {
       return NextResponse.json({ ok: false, error: "الاسم ورقم الهاتف مطلوبان" }, { status: 400 });
     }
     const [row] = await db.insert(enrollments).values({
       courseId: Number(courseId), studentName, studentPhone, studentEmail,
+      paymentRef: paymentRef || null,
       status: "pending",
     }).returning();
     return NextResponse.json({ ok: true, data: row });

@@ -28,7 +28,7 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollCourse, setEnrollCourse] = useState<Course | null>(null);
-  const [form, setForm] = useState({ studentName: "", studentPhone: "", studentEmail: "" });
+  const [form, setForm] = useState({ studentName: "", studentPhone: "", studentEmail: "", paymentRef: "" });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -40,7 +40,7 @@ export default function CoursesPage() {
   function openEnroll(c: Course) {
     if (c.status !== "open") return;
     setEnrollCourse(c);
-    setForm({ studentName: "", studentPhone: "", studentEmail: "" });
+    setForm({ studentName: "", studentPhone: "", studentEmail: "", paymentRef: "" });
     setDone(false);
     setError("");
   }
@@ -54,7 +54,7 @@ export default function CoursesPage() {
       const res = await fetch("/api/enrollments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId: enrollCourse.id, ...form }),
+        body: JSON.stringify({ courseId: enrollCourse.id, ...form, paymentRef: form.paymentRef || undefined }),
       });
       const data = await res.json();
       if (data.ok) setDone(true);
@@ -150,9 +150,14 @@ export default function CoursesPage() {
                 <div className="text-6xl">✅</div>
                 <h2 className="text-xl font-black text-[#1a3a6b]">تم التسجيل!</h2>
                 <p className="text-gray-500 text-sm">
-                  تم تسجيل طلبك في دورة <strong>{enrollCourse.title}</strong>.<br />
-                  سيتواصل معك الأستاذ قريبًا بتفاصيل الحصة.
+                  تم تسجيل طلبك في دورة <strong>{enrollCourse.title}</strong>.
                 </p>
+                {!form.paymentRef && (
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-3 text-sm text-red-700">
+                    💳 لا تنس تحويل رسوم الاشتراك عبر فودافون كاش على الرقم <span className="font-black" dir="ltr">01007050667</span>
+                  </div>
+                )}
+                <p className="text-gray-400 text-xs">سيتواصل معك الأستاذ قريبًا بتفاصيل الحصة.</p>
                 <button
                   onClick={() => setEnrollCourse(null)}
                   className="w-full bg-[#1a3a6b] text-white font-bold py-3.5 rounded-2xl mt-2"
@@ -204,6 +209,33 @@ export default function CoursesPage() {
                       dir="ltr"
                     />
                   </div>
+
+                  {/* Vodafone Cash payment box */}
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">💳</span>
+                      <p className="font-black text-red-700 text-sm">الدفع عبر فودافون كاش</p>
+                    </div>
+                    <p className="text-red-600 text-sm">
+                      حوّل رسوم الاشتراك على رقم فودافون كاش:
+                    </p>
+                    <p className="font-black text-red-800 text-lg tracking-widest text-center py-1" dir="ltr">
+                      01007050667
+                    </p>
+                    <p className="text-red-500 text-xs">ثم أدخل رقم الإيصال في الحقل أدناه</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-600 mb-1.5">رقم إيصال الدفع <span className="text-gray-400 font-normal">(اختياري — أدخله بعد التحويل)</span></label>
+                    <input
+                      value={form.paymentRef}
+                      onChange={(e) => setForm({ ...form, paymentRef: e.target.value })}
+                      placeholder="مثال: 123456789"
+                      className="w-full border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-gray-50"
+                      dir="ltr"
+                    />
+                  </div>
+
                   {error && <p className="text-red-500 text-sm text-center">{error}</p>}
                   <button
                     type="submit"

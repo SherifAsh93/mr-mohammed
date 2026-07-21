@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type Enrollment = { id: number; courseId: number; studentName: string; studentPhone: string; studentEmail: string | null; status: string; createdAt: string; };
+type Enrollment = { id: number; courseId: number; studentName: string; studentPhone: string; studentEmail: string | null; paymentRef: string | null; status: string; createdAt: string; };
 type Course = { id: number; title: string; };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -81,6 +81,10 @@ export default function AdminEnrollments() {
                     <a href={`tel:${e.studentPhone}`} className="text-gray-400 text-xs" dir="ltr">{e.studentPhone}</a>
                     {e.studentEmail && <p className="text-gray-400 text-xs" dir="ltr">{e.studentEmail}</p>}
                     <p className="text-gray-400 text-xs mt-1">📚 {courseTitle(e.courseId)}</p>
+                    {e.paymentRef
+                      ? <p className="text-green-600 text-xs mt-0.5 font-semibold">💳 إيصال: <span dir="ltr">{e.paymentRef}</span></p>
+                      : <p className="text-amber-500 text-xs mt-0.5">💳 لم يُرسل إيصال بعد</p>
+                    }
                   </div>
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${st.color}`}>{st.label}</span>
                 </div>

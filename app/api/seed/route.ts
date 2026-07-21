@@ -66,6 +66,8 @@ export async function GET() {
     await db.execute(sql`ALTER TABLE mrm_results DROP COLUMN IF EXISTS grade`);
     // Drop old schedule table
     await db.execute(sql`DROP TABLE IF EXISTS mrm_schedule`);
+    // Add payment_ref column to enrollments if it doesn't exist
+    await db.execute(sql`ALTER TABLE mrm_enrollments ADD COLUMN IF NOT EXISTS payment_ref VARCHAR(100)`);
 
     const existing = await db.select().from(adminSettings).limit(1);
     if (!existing.length) {

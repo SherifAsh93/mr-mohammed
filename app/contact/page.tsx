@@ -24,7 +24,7 @@ export default function ContactPage() {
 
         {/* WhatsApp */}
         <a
-          href="https://wa.me/201000000000"
+          href="https://wa.me/201007050667"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-4 bg-green-500 active:bg-green-600 text-white rounded-2xl px-5 py-4 transition-all active:scale-95 shadow-md shadow-green-500/30"
@@ -46,7 +46,7 @@ export default function ContactPage() {
 
         {/* Phone */}
         <a
-          href="tel:+201000000000"
+          href="tel:+201007050667"
           className="flex items-center gap-4 bg-white border border-gray-100 shadow-sm rounded-2xl px-5 py-4 transition-all active:scale-95"
         >
           <div className="w-10 h-10 rounded-xl bg-[#eef1fb] flex items-center justify-center shrink-0 text-[#1a3a6b]">
@@ -56,7 +56,7 @@ export default function ContactPage() {
           </div>
           <div className="flex-1 text-right">
             <p className="font-bold text-[#1a3a6b] text-base">اتصال مباشر</p>
-            <p className="text-gray-400 text-sm" dir="ltr">+20 100 000 0000</p>
+            <p className="text-gray-400 text-sm" dir="ltr">+20 100 705 0667</p>
           </div>
         </a>
 

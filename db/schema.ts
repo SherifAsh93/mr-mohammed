@@ -45,6 +45,7 @@ export const enrollments = pgTable("mrm_enrollments", {
   studentName: varchar("student_name", { length: 255 }).notNull(),
   studentPhone: varchar("student_phone", { length: 30 }).notNull(),
   studentEmail: varchar("student_email", { length: 255 }),
+  paymentRef: varchar("payment_ref", { length: 100 }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow(),
 });
