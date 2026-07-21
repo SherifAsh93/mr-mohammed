@@ -197,6 +197,17 @@ export default function AdminCourses() {
                 <div className="border-t border-gray-100 bg-gray-50 p-4 space-y-3">
                   <p className="text-xs font-black text-gray-500 uppercase tracking-wide">روابط الحصص</p>
 
+                  {/* Google Meet instructions */}
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 space-y-2">
+                    <p className="text-xs font-black text-blue-700">📹 إزاي تعمل رابط حصة على Google Meet</p>
+                    <ol className="space-y-1.5 text-xs text-blue-600">
+                      <li><span className="font-bold">1.</span> افتح تطبيق <span className="font-bold">Google Meet</span> على موبايلك (أو من <span dir="ltr" className="font-medium">meet.google.com</span>)</li>
+                      <li><span className="font-bold">2.</span> اضغط <span className="font-bold">"اجتماع جديد"</span> ثم اختار <span className="font-bold">"إنشاء اجتماع لوقت لاحق"</span></li>
+                      <li><span className="font-bold">3.</span> اضغط <span className="font-bold">"نسخ رابط الاجتماع"</span> ثم الصقه في الحقل أدناه</li>
+                    </ol>
+                    <p className="text-xs text-blue-500">✅ مجاني بلا حدود زمنية — حتى 100 طالب في نفس الوقت</p>
+                  </div>
+
                   {/* Add session form */}
                   <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-2">
                     <input value={sessForm.title} onChange={e => setSessForm({ ...sessForm, title: e.target.value })}

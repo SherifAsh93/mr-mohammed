@@ -163,6 +163,14 @@ export default function CoursesPage() {
                     💳 لا تنس تحويل رسوم الاشتراك عبر فودافون كاش على الرقم <span className="font-black" dir="ltr">01007050667</span>
                   </div>
                 )}
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-right space-y-1.5">
+                  <p className="font-black text-blue-700 text-sm">📹 الحصص بتتعمل على Google Meet</p>
+                  <ul className="text-blue-600 text-xs space-y-1">
+                    <li>• مش محتاج تحمّل أي تطبيق</li>
+                    <li>• بس افتح الرابط من متصفح موبايلك</li>
+                    <li>• الأستاذ هيبعتلك رابط الحصة قبل كل درس عبر واتساب</li>
+                  </ul>
+                </div>
                 <p className="text-gray-400 text-xs">سيتواصل معك الأستاذ قريبًا بتفاصيل الحصة.</p>
                 <button
                   onClick={() => setEnrollCourse(null)}
