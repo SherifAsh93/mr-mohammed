@@ -2,14 +2,16 @@
 
 ## What It Does
 
-Mobile-first PWA for an Arabic & Islamic Studies teacher. Students browse courses, enroll online, and pay via Vodafone Cash. Teacher manages everything from a hidden admin panel — courses with per-lesson meeting links, materials, student results, and enrollments with payment receipts.
+Full Udemy-style learning platform for an Arabic & Islamic Studies teacher. Students create accounts with phone + password, enroll in courses, and access live sessions + recordings from their personal dashboard. Teacher manages everything via a hidden admin panel.
 
 **Live URL:** https://mohammedcourses.vercel.app  
 **GitHub:** https://github.com/SherifAsh93/mr-mohammed  
 **Local:** `/home/sherif/sites/mr-mohammed`  
-**Stack:** Next.js 16.2.10 (Turbopack) · TypeScript · Tailwind CSS 4 · Neon PostgreSQL · Drizzle ORM · bcryptjs  
+**Stack:** Next.js 16.2.10 (Turbopack) · TypeScript · Tailwind CSS 4 · Neon PostgreSQL · Drizzle ORM · bcryptjs · jose (JWT)  
 **Deploy:** Vercel CLI (`vercel --prod`) — `vercel.json` aliases to `mohammedcourses.vercel.app`  
-**Admin access:** Triple-click the logo → password: `123456` (stored in `sessionStorage`)
+**Admin access:** Triple-click the logo → password: `123456` (stored in `sessionStorage`)  
+**Student auth:** Phone + password → JWT in httpOnly cookie `student_token` (30-day)  
+**Video storage:** Cloudinary (cloud: `dzppk5ylt`, preset: `mr_mohammed_videos`, unsigned) — direct browser upload with progress bar
 
 ---
 
