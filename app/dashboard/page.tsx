@@ -174,9 +174,10 @@ export default function DashboardPage() {
                                   href={s.recordedUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="bg-amber-100 text-amber-800 text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
+                                  className="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
                                 >
-                                  ▶ مشاهدة التسجيل
+                                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5V8.5l6.25 3.5-6.25 3.5z"/></svg>
+                                  مشاهدة على يوتيوب
                                 </a>
                               )}
                             </div>
