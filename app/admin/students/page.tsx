@@ -40,6 +40,28 @@ export default function AdminStudents() {
         <span className="bg-blue-100 text-blue-700 font-bold text-sm px-3 py-1.5 rounded-full">{filtered.length}</span>
       </div>
 
+      {/* Teacher Guide */}
+      <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
+        <summary className="px-4 py-3.5 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
+          <span>📖 دليل إدارة الطلاب</span>
+          <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
+        </summary>
+        <div className="px-4 pb-4 pt-2 space-y-2.5 text-xs text-amber-800">
+          {[
+            { icon: "🔍", text: 'ابحث عن طالب باسمه أو رقم هاتفه من خلال حقل البحث أعلاه.' },
+            { icon: "📋", text: 'كل طالب يظهر بحالة "جديد" حين يسجّل لأول مرة — راجع إيصال الدفع قبل القبول.' },
+            { icon: "✅", text: 'اضغط "قبول" لتفعيل التسجيل — بعدها يظهر رابط الحصص في لوحة الطالب.' },
+            { icon: "❌", text: 'اضغط "رفض" إذا لم يكتمل الدفع أو كان هناك مشكلة.' },
+            { icon: "💬", text: 'اضغط "واتساب" بجانب الطالب للتواصل معه مباشرة.' },
+          ].map((s, i) => (
+            <div key={i} className="flex gap-2.5 items-start">
+              <span className="text-base shrink-0">{s.icon}</span>
+              <p className="leading-relaxed">{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </details>
+
       <input
         value={search}
         onChange={e => setSearch(e.target.value)}

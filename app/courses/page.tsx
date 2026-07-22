@@ -83,6 +83,28 @@ export default function CoursesPage() {
       </div>
 
       <main className="flex-1 max-w-lg mx-auto w-full px-4 py-5 space-y-4">
+        {/* Student Enrollment Guide */}
+        <details className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
+          <summary className="px-4 py-3.5 cursor-pointer font-bold text-[#1a3a6b] text-sm flex items-center justify-between select-none list-none">
+            <span>📋 كيف أسجّل في دورة؟</span>
+            <span className="text-blue-400 text-xs font-normal">اضغط للعرض</span>
+          </summary>
+          <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-blue-800">
+            {[
+              { step: "١", text: 'اختر الدورة المناسبة واضغط "سجّل الآن" (الزر الأزرق).' },
+              { step: "٢", text: 'أدخل اسمك ورقم هاتفك / واتساب.' },
+              { step: "٣", text: 'حوّل رسوم الاشتراك عبر فودافون كاش على الرقم المذكور في النموذج.' },
+              { step: "٤", text: 'أدخل رقم الإيصال بعد التحويل (اختياري — يمكنك إرساله لاحقاً عبر واتساب).' },
+              { step: "٥", text: 'بعد قبول الأستاذ، ستجد رابط الحصة ومواعيدها في لوحة التحكم الخاصة بك.' },
+            ].map(s => (
+              <div key={s.step} className="flex gap-2.5 items-start">
+                <span className="w-5 h-5 rounded-full bg-[#1a3a6b] text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5">{s.step}</span>
+                <p className="leading-relaxed">{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+
         {loading ? (
           <div className="text-center py-20 text-gray-400 text-sm">جاري التحميل...</div>
         ) : courses.length === 0 ? (
@@ -169,11 +191,12 @@ export default function CoursesPage() {
                   </div>
                 )}
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-right space-y-1.5">
-                  <p className="font-black text-blue-700 text-sm">📹 الحصص بتتعمل على Google Meet</p>
+                  <p className="font-black text-blue-700 text-sm">📹 الحصص بتتعمل على Jitsi Meet</p>
                   <ul className="text-blue-600 text-xs space-y-1">
-                    <li>• مش محتاج تحمّل أي تطبيق</li>
-                    <li>• بس افتح الرابط من متصفح موبايلك</li>
-                    <li>• الأستاذ هيبعتلك رابط الحصة قبل كل درس عبر واتساب</li>
+                    <li>• مش محتاج تحمّل أي تطبيق أو تعمل حساب</li>
+                    <li>• افتح الرابط من متصفح موبايلك أو لابتوبك</li>
+                    <li>• الكاميرا اختيارية — تقدر تفتحها أو تسكّرها</li>
+                    <li>• لو فاتتك الحصة، التسجيل بيبقى على يوتيوب</li>
                   </ul>
                 </div>
                 <p className="text-gray-400 text-xs">سيتواصل معك الأستاذ قريبًا بتفاصيل الحصة.</p>

@@ -111,6 +111,11 @@ export default function AdminCourses() {
     setEditingRecording(prev => new Set(prev).add(sessionId));
   }
 
+  function generateJitsiLink() {
+    const suffix = Math.random().toString(36).slice(2, 8);
+    setSessForm(prev => ({ ...prev, meetingLink: `https://meet.jit.si/درس-${suffix}` }));
+  }
+
   function formatDate(iso: string | null) {
     if (!iso) return "";
     return new Date(iso).toLocaleString("ar-EG", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -124,6 +129,41 @@ export default function AdminCourses() {
         <h1 className="text-xl font-black text-[#1a3a6b]">🎓 الدورات</h1>
         <button onClick={openAdd} className="bg-[#1a3a6b] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#122a52] transition-colors">+ دورة جديدة</button>
       </div>
+
+      {/* Teacher Guide */}
+      <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
+        <summary className="px-4 py-3.5 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
+          <span>📖 دليل إدارة الدورات والحصص</span>
+          <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
+        </summary>
+        <div className="px-4 pb-4 pt-1 space-y-3 text-xs text-amber-800">
+          <div className="space-y-2">
+            <p className="font-black text-amber-900 text-sm">🎓 إنشاء دورة</p>
+            <p>اضغط "+ دورة جديدة"، أضف العنوان والمادة والموعد والسعر، ثم اضغط "إضافة الدورة".</p>
+          </div>
+          <div className="space-y-2">
+            <p className="font-black text-amber-900 text-sm">📎 إضافة حصة بـ Jitsi Meet (مجاني)</p>
+            <ol className="space-y-1 list-none">
+              <li>١. افتح الدورة واضغط "الحصص"</li>
+              <li>٢. اضغط "🔗 توليد رابط Jitsi" — سيتعبّأ الرابط تلقائياً</li>
+              <li>٣. أضف اسم الحصة والتاريخ ثم اضغط "+ إضافة حصة"</li>
+              <li>٤. عند وقت الحصة، افتح الرابط وستدخل مباشرة — لا يحتاج حساب</li>
+            </ol>
+          </div>
+          <div className="space-y-2">
+            <p className="font-black text-amber-900 text-sm">🎬 تسجيل الحصة على يوتيوب</p>
+            <ol className="space-y-1 list-none">
+              <li>١. داخل Jitsi، اضغط النقاط الثلاث ⋮ ← "Start recording" أو "Start YouTube Live"</li>
+              <li>٢. إذا اخترت Live: أدخل Stream Key من يوتيوب ستوديو</li>
+              <li>٣. بعد انتهاء الحصة، الفيديو يُحفظ تلقائياً في قناتك</li>
+              <li>٤. افتح الفيديو على يوتيوب، انسخ الرابط، والصقه في حقل "رابط التسجيل" بجانب الحصة</li>
+            </ol>
+          </div>
+          <div className="bg-amber-100 rounded-xl p-3">
+            <p className="font-semibold">💡 الطلاب المقبولون يشوفون الرابط ورابط التسجيل تلقائياً في لوحة التحكم الخاصة بهم.</p>
+          </div>
+        </div>
+      </details>
 
       {msg && <p className={`text-sm font-semibold ${msg.includes("✓") ? "text-green-600" : "text-red-500"}`}>{msg}</p>}
 
@@ -227,15 +267,15 @@ export default function AdminCourses() {
                 <div className="border-t border-gray-100 bg-gray-50 p-4 space-y-4">
                   <p className="text-xs font-black text-gray-500 uppercase tracking-wide">الحصص</p>
 
-                  {/* Google Meet instructions */}
+                  {/* Meeting link instructions */}
                   <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 space-y-2">
-                    <p className="text-xs font-black text-blue-700">📹 إزاي تعمل رابط حصة على Google Meet</p>
+                    <p className="text-xs font-black text-blue-700">🎥 Jitsi Meet — مجاني بالكامل بدون حساب</p>
                     <ol className="space-y-1 text-xs text-blue-600">
-                      <li><span className="font-bold">1.</span> افتح <span className="font-bold">Google Meet</span> أو <span dir="ltr" className="font-medium">meet.google.com</span></li>
-                      <li><span className="font-bold">2.</span> اضغط <span className="font-bold">"اجتماع جديد"</span> ← <span className="font-bold">"إنشاء لوقت لاحق"</span></li>
-                      <li><span className="font-bold">3.</span> انسخ الرابط والصقه أدناه</li>
+                      <li><span className="font-bold">١.</span> اضغط "🔗 توليد رابط Jitsi" أدناه — سيتعبّأ الرابط تلقائياً</li>
+                      <li><span className="font-bold">٢.</span> أو اذهب لـ <span dir="ltr" className="font-medium">meet.jit.si</span> وابدأ غرفة جديدة بأي اسم</li>
+                      <li><span className="font-bold">٣.</span> الطلاب يدخلون الغرفة بنفس الرابط — كاميرا اختيارية للجميع</li>
                     </ol>
-                    <p className="text-xs text-blue-500">✅ مجاني — حتى 100 طالب</p>
+                    <p className="text-xs text-blue-500">✅ مجاني — حتى 100 مشارك — للتسجيل على يوتيوب: ⋮ ← Start recording</p>
                   </div>
 
                   {/* Add session form */}
@@ -243,9 +283,18 @@ export default function AdminCourses() {
                     <input value={sessForm.title} onChange={e => setSessForm({ ...sessForm, title: e.target.value })}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
                       placeholder="اسم الحصة (مثال: الحصة الأولى، النحو — الفاعل)" />
-                    <input value={sessForm.meetingLink} onChange={e => setSessForm({ ...sessForm, meetingLink: e.target.value })}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
-                      placeholder="رابط الاجتماع" dir="ltr" />
+                    <div className="flex gap-2">
+                      <input value={sessForm.meetingLink} onChange={e => setSessForm({ ...sessForm, meetingLink: e.target.value })}
+                        className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                        placeholder="رابط الاجتماع" dir="ltr" />
+                      <button
+                        type="button"
+                        onClick={generateJitsiLink}
+                        className="shrink-0 bg-blue-600 text-white text-xs font-bold px-3 py-2.5 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                      >
+                        🔗 Jitsi
+                      </button>
+                    </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-500 mb-1">تاريخ ووقت الحصة</label>
                       <input

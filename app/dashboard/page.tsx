@@ -101,6 +101,49 @@ export default function DashboardPage() {
       </div>
 
       <main className="max-w-lg mx-auto px-4 py-5 space-y-4">
+        {/* Student Guide per tab */}
+        {activeTab === "courses" && (
+          <details className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
+            <summary className="px-4 py-3 cursor-pointer font-bold text-[#1a3a6b] text-sm flex items-center justify-between select-none list-none">
+              <span>📖 دليل استخدام لوحة الدروس</span>
+              <span className="text-blue-400 text-xs font-normal">اضغط للعرض</span>
+            </summary>
+            <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-blue-800">
+              <p>• ستجد هنا الدورات المؤكدة والحصص المرتبطة بها.</p>
+              <p>• عند قرب موعد الحصة، اضغط <span className="font-bold">🎥 دخول الحصة</span> للانضمام — لا تحتاج حساب ولا تطبيق.</p>
+              <p>• الكاميرا اختيارية — يمكنك الدخول بدونها.</p>
+              <p>• إذا فاتتك الحصة، ابحث عن زر <span className="font-bold text-red-700">مشاهدة على يوتيوب</span> عند ظهوره.</p>
+              <p>• إذا لم تظهر دوراتك، انتظر تأكيد الأستاذ أو تواصل معه.</p>
+            </div>
+          </details>
+        )}
+        {activeTab === "results" && (
+          <details className="bg-teal-50 border border-teal-100 rounded-2xl overflow-hidden">
+            <summary className="px-4 py-3 cursor-pointer font-bold text-teal-700 text-sm flex items-center justify-between select-none list-none">
+              <span>📖 دليل النتائج</span>
+              <span className="text-teal-400 text-xs font-normal">اضغط للعرض</span>
+            </summary>
+            <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-teal-800">
+              <p>• تظهر هنا نتائج اختباراتك وامتحاناتك بعد رصدها من الأستاذ.</p>
+              <p>• الشريط الأخضر = ممتاز (85%+) · الأصفر = جيد · الأحمر = يحتاج مراجعة.</p>
+              <p>• إذا لم تجد نتائجك، تأكد أن الأستاذ أضافها بعد الامتحان.</p>
+            </div>
+          </details>
+        )}
+        {activeTab === "materials" && (
+          <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
+            <summary className="px-4 py-3 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
+              <span>📖 دليل المواد</span>
+              <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
+            </summary>
+            <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-amber-800">
+              <p>• تجد هنا ملفات PDF والفيديوهات والروابط التي رفعها الأستاذ.</p>
+              <p>• اضغط على أي مادة لفتحها في متصفحك أو تحميلها.</p>
+              <p>• إذا لم تجد مواد، تابع — الأستاذ يضيف مواد جديدة بانتظام.</p>
+            </div>
+          </details>
+        )}
+
         {/* MY COURSES TAB */}
         {activeTab === "courses" && (
           <>

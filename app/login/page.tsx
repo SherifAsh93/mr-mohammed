@@ -86,7 +86,19 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+        <details className="mt-8 bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
+          <summary className="px-4 py-3 cursor-pointer font-bold text-[#1a3a6b] text-sm flex items-center justify-between select-none list-none">
+            <span>❓ محتاج مساعدة؟</span>
+            <span className="text-blue-400 text-xs font-normal">اضغط للعرض</span>
+          </summary>
+          <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-blue-800">
+            <p><span className="font-bold">لو بتسجّل أول مرة:</span> اضغط "سجّل الآن" أدناه وأنشئ حسابك بهاتفك وكلمة سر.</p>
+            <p><span className="font-bold">لو نسيت كلمة السر:</span> تواصل مع الأستاذ عبر واتساب لإعادة تعيينها.</p>
+            <p><span className="font-bold">لو مش ظاهرة دروسك:</span> تأكد إن الأستاذ قبِل تسجيلك — تواصل معه إذا انتظرت أكتر من 24 ساعة.</p>
+          </div>
+        </details>
+
+        <div className="mt-5 pt-5 border-t border-gray-100 text-center">
           <Link href="/" className="text-gray-400 text-sm hover:text-gray-600">
             ← العودة للرئيسية
           </Link>

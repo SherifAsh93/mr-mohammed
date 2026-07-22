@@ -81,6 +81,27 @@ export default function AdminAttendance() {
     <div className="space-y-5">
       <h1 className="text-xl font-black text-[#1a3a6b]">📋 الحضور والغياب</h1>
 
+      {/* Teacher Guide */}
+      <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
+        <summary className="px-4 py-3.5 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
+          <span>📖 دليل تسجيل الحضور</span>
+          <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
+        </summary>
+        <div className="px-4 pb-4 pt-2 space-y-2.5 text-xs text-amber-800">
+          {[
+            { step: "١", text: 'اختر الدورة من القائمة أدناه.' },
+            { step: "٢", text: 'اختر الحصة المطلوبة (اليوم أو أي حصة سابقة).' },
+            { step: "٣", text: 'اضغط على دائرة ✓/✗ بجانب كل طالب لتغيير حضوره أو غيابه.' },
+            { step: "٤", text: 'اضغط "حفظ الحضور" في النهاية — يمكنك العودة وتعديله لاحقاً.' },
+          ].map(s => (
+            <div key={s.step} className="flex gap-3 items-start">
+              <span className="w-6 h-6 rounded-full bg-amber-200 text-amber-800 font-black text-xs flex items-center justify-center shrink-0">{s.step}</span>
+              <p className="leading-relaxed pt-0.5">{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </details>
+
       {/* Step 1: Choose course */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
         <p className="text-xs font-black text-gray-400 uppercase tracking-wide">1 — اختر الدورة</p>

@@ -51,8 +51,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Student Getting Started Guide */}
+      <section className="max-w-lg mx-auto w-full px-4 mt-5">
+        <details className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
+          <summary className="px-5 py-4 cursor-pointer font-bold text-[#1a3a6b] text-sm flex items-center justify-between select-none list-none">
+            <span>🎓 كيف تبدأ؟ — خطوات التسجيل</span>
+            <span className="text-blue-400 text-xs font-normal">اضغط للعرض</span>
+          </summary>
+          <div className="px-5 pb-5 pt-2 space-y-3">
+            {[
+              { step: "١", title: "اختر الدورة", body: 'اضغط "الدورات" أعلاه، اختر الدورة المناسبة واضغط "سجّل الآن".' },
+              { step: "٢", title: "ادفع الرسوم", body: 'حوّل رسوم الاشتراك عبر فودافون كاش على الرقم المكتوب في نموذج التسجيل.' },
+              { step: "٣", title: "أدخل رقم الإيصال", body: 'بعد التحويل، أدخل رقم الإيصال في الحقل المخصص لتسريع تأكيد التسجيل.' },
+              { step: "٤", title: "انتظر تأكيد الأستاذ", body: 'سيتواصل معك الأستاذ خلال 24 ساعة لتأكيد تسجيلك.' },
+              { step: "٥", title: "ادخل لوحة التحكم", body: 'بعد التأكيد، سجّل دخولك وستجد مواعيد الحصص وروابط الدخول في قسم "دروسي".' },
+            ].map(s => (
+              <div key={s.step} className="flex gap-3">
+                <span className="w-7 h-7 rounded-full bg-[#1a3a6b] text-white font-black text-sm flex items-center justify-center shrink-0 mt-0.5">{s.step}</span>
+                <div>
+                  <p className="font-bold text-[#1a3a6b] text-sm">{s.title}</p>
+                  <p className="text-blue-700 text-xs leading-relaxed mt-0.5">{s.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </details>
+      </section>
+
       {/* About strip */}
-      <section className="max-w-lg mx-auto w-full px-4 mt-6">
+      <section className="max-w-lg mx-auto w-full px-4 mt-5">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
           <h2 className="font-black text-[#1a3a6b] text-lg">نبذة عن الأستاذ</h2>
           <p className="text-gray-500 text-sm leading-relaxed">

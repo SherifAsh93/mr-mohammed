@@ -53,6 +53,35 @@ export default function AdminDashboard() {
           <Link href="/" target="_blank" className="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">🌐 الموقع</Link>
         </div>
       </div>
+
+      {/* Teacher Guide */}
+      <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
+        <summary className="px-5 py-4 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
+          <span>📖 دليل الأستاذ — كيف تبدأ</span>
+          <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
+        </summary>
+        <div className="px-5 pb-5 pt-1 space-y-3">
+          {[
+            { num: "١", title: "أضف دورة", body: 'من قسم "الدورات"، أنشئ دورة جديدة بعنوانها وموعدها وسعرها وحالتها.' },
+            { num: "٢", title: "الطلاب يسجّلون", body: 'الطلاب يزورون الموقع، يختارون الدورة، ويضغطون "سجّل الآن" مع إرسال رقم إيصال الدفع.' },
+            { num: "٣", title: "وافق على التسجيلات", body: 'من قسم "الطلاب"، راجع كل تسجيل، تحقق من إيصال الدفع، ثم اضغط قبول لتفعيل الطالب.' },
+            { num: "٤", title: "أضف الحصص", body: 'من قسم "الدورات"، افتح الدورة واضغط "الحصص"، ثم أضف كل حصة برابطها وموعدها.' },
+            { num: "٥", title: "أدر الحضور", body: 'بعد كل حصة، اذهب لقسم "الحضور"، اختر الدورة والحصة، وسجّل من حضر ومن غاب.' },
+            { num: "٦", title: "أضف رابط التسجيل", body: 'بعد انتهاء الحصة ورفعها على يوتيوب، الصق رابط الفيديو في حقل "رابط التسجيل" بجانب الحصة.' },
+          ].map(s => (
+            <div key={s.num} className="flex gap-3">
+              <span className="w-7 h-7 rounded-full bg-amber-200 text-amber-800 font-black text-sm flex items-center justify-center shrink-0 mt-0.5">{s.num}</span>
+              <div>
+                <p className="font-bold text-amber-900 text-sm">{s.title}</p>
+                <p className="text-amber-700 text-xs leading-relaxed mt-0.5">{s.body}</p>
+              </div>
+            </div>
+          ))}
+          <div className="bg-amber-100 rounded-xl p-3 mt-1">
+            <p className="text-amber-800 text-xs font-semibold">💡 نصيحة: استخدم Jitsi Meet لعمل حصص فيديو مجانية بدون حساب Google — اضغط "الدورات" وشوف الإرشادات.</p>
+          </div>
+        </div>
+      </details>
     </div>
   );
 }
