@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 
 type Course = {
@@ -29,19 +30,23 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrollCourse, setEnrollCourse] = useState<Course | null>(null);
-  const [form, setForm] = useState({ studentName: "", studentPhone: "", studentEmail: "", paymentRef: "" });
+  const [form, setForm] = useState({ studentName: "", studentPhone: "", paymentRef: "" });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [student, setStudent] = useState<{ name: string; phone: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/courses").then(r => r.json()).then(setCourses).finally(() => setLoading(false));
+    fetch("/api/student/me").then(r => r.json()).then(d => {
+      if (d.user) setStudent(d.user);
+    });
   }, []);
 
   function openEnroll(c: Course) {
     if (c.status !== "open") return;
     setEnrollCourse(c);
-    setForm({ studentName: "", studentPhone: "", studentEmail: "", paymentRef: "" });
+    setForm({ studentName: student?.name || "", studentPhone: student?.phone || "", paymentRef: "" });
     setDone(false);
     setError("");
   }
@@ -55,7 +60,7 @@ export default function CoursesPage() {
       const res = await fetch("/api/enrollments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ courseId: enrollCourse.id, ...form, paymentRef: form.paymentRef || undefined }),
+        body: JSON.stringify({ courseId: enrollCourse.id, studentName: form.studentName, studentPhone: form.studentPhone, paymentRef: form.paymentRef || undefined }),
       });
       const data = await res.json();
       if (data.ok) setDone(true);
@@ -212,17 +217,12 @@ export default function CoursesPage() {
                       dir="ltr"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-600 mb-1.5">البريد الإلكتروني <span className="text-gray-400 font-normal">(اختياري)</span></label>
-                    <input
-                      type="email"
-                      value={form.studentEmail}
-                      onChange={(e) => setForm({ ...form, studentEmail: e.target.value })}
-                      placeholder="example@email.com"
-                      className="w-full border border-gray-200 rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] bg-gray-50"
-                      dir="ltr"
-                    />
-                  </div>
+                  {!student && (
+                    <div className="bg-[#eef1fb] border border-[#1a3a6b]/20 rounded-2xl p-3 text-sm flex items-center justify-between gap-2">
+                      <p className="text-[#1a3a6b] text-xs">لديك حساب؟ سجّل دخولك لمتابعة دروسك</p>
+                      <Link href="/login" className="text-[#1a3a6b] font-black text-xs hover:underline shrink-0">دخول ←</Link>
+                    </div>
+                  )}
 
                   {/* Vodafone Cash payment box */}
                   <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">

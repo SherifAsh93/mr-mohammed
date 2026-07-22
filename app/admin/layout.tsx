@@ -6,7 +6,9 @@ import Link from "next/link";
 const navItems = [
   { href: "/admin", label: "الرئيسية", icon: "🏠" },
   { href: "/admin/courses", label: "الدورات", icon: "🎓" },
+  { href: "/admin/students", label: "الطلاب", icon: "👤" },
   { href: "/admin/enrollments", label: "التسجيلات", icon: "👥" },
+  { href: "/admin/attendance", label: "الحضور", icon: "📋" },
   { href: "/admin/materials", label: "المواد", icon: "📚" },
   { href: "/admin/results", label: "النتائج", icon: "📊" },
   { href: "/admin/settings", label: "الإعدادات", icon: "⚙️" },

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 const tabs = [
   { href: "/", icon: HomeIcon, label: "الرئيسية" },
   { href: "/courses", icon: CoursesIcon, label: "الدورات" },
-  { href: "/materials", icon: MaterialsIcon, label: "المواد" },
+  { href: "/dashboard", icon: DashboardIcon, label: "حسابي" },
   { href: "/results", icon: ResultsIcon, label: "النتائج" },
   { href: "/contact", icon: ContactIcon, label: "تواصل" },
 ];
@@ -93,6 +93,16 @@ function ContactIcon({ active }: { active: boolean }) {
       {active
         ? <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
         : <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+      }
+    </svg>
+  );
+}
+function DashboardIcon({ active }: { active: boolean }) {
+  return (
+    <svg className={`w-6 h-6 ${active ? "fill-[#1a3a6b]" : "fill-none stroke-gray-400"}`} viewBox="0 0 24 24" strokeWidth={active ? 0 : 1.8}>
+      {active
+        ? <path fillRule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clipRule="evenodd" />
+        : <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
       }
     </svg>
   );

@@ -1,9 +1,18 @@
-import { pgTable, serial, text, varchar, timestamp, integer, decimal } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, varchar, timestamp, integer, decimal, unique } from "drizzle-orm/pg-core";
 
 export const adminSettings = pgTable("mrm_admin_settings", {
   key: varchar("key", { length: 100 }).primaryKey(),
   value: text("value").notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const users = pgTable("mrm_users", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 30 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const materials = pgTable("mrm_materials", {
@@ -44,16 +53,26 @@ export const sessions = pgTable("mrm_sessions", {
   courseId: integer("course_id").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   meetingLink: text("meeting_link").notNull(),
+  scheduledAt: timestamp("scheduled_at"),
+  recordedUrl: text("recorded_url"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const enrollments = pgTable("mrm_enrollments", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").notNull(),
+  userId: integer("user_id"),
   studentName: varchar("student_name", { length: 255 }).notNull(),
   studentPhone: varchar("student_phone", { length: 30 }).notNull(),
-  studentEmail: varchar("student_email", { length: 255 }),
   paymentRef: varchar("payment_ref", { length: 100 }),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const attendance = pgTable("mrm_attendance", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  enrollmentId: integer("enrollment_id").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("absent"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [unique().on(t.sessionId, t.enrollmentId)]);

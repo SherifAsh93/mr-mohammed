@@ -1,0 +1,8 @@
+import { NextResponse } from "next/server";
+import { getStudentSession } from "@/lib/auth-student";
+
+export async function GET() {
+  const session = await getStudentSession();
+  if (!session) return NextResponse.json({ user: null });
+  return NextResponse.json({ user: session });
+}
