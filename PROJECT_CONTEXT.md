@@ -2,16 +2,16 @@
 
 ## What It Does
 
-Full Udemy-style learning platform for an Arabic & Islamic Studies teacher. Students create accounts with phone + password, enroll in courses, and access live sessions + recordings from their personal dashboard. Teacher manages everything via a hidden admin panel.
+Online teaching platform for an Arabic & Islamic Studies teacher. Students register with phone + password, enroll in courses, and join live video sessions from their personal dashboard. Teacher manages everything via a hidden admin panel. Video calls are embedded directly inside the site via Jitsi Meet (no external apps needed).
 
 **Live URL:** https://mohammedcourses.vercel.app  
 **GitHub:** https://github.com/SherifAsh93/mr-mohammed  
 **Local:** `/home/sherif/sites/mr-mohammed`  
 **Stack:** Next.js 16.2.10 (Turbopack) · TypeScript · Tailwind CSS 4 · Neon PostgreSQL · Drizzle ORM · bcryptjs · jose (JWT)  
-**Deploy:** Vercel CLI (`vercel --prod`) — `vercel.json` aliases to `mohammedcourses.vercel.app`  
+**Deploy:** Push to GitHub → Vercel auto-deploys  
 **Admin access:** Triple-click the logo → password: `123456` (stored in `sessionStorage`)  
 **Student auth:** Phone + password → JWT in httpOnly cookie `student_token` (30-day)  
-**Video storage:** Cloudinary (cloud: `dzppk5ylt`, preset: `mr_mohammed_videos`, unsigned) — direct browser upload with progress bar
+**Video calls:** Jitsi Meet embedded via External API iframe (`components/JitsiSession.tsx`)
 
 ---
 
@@ -21,19 +21,22 @@ Full Udemy-style learning platform for an Arabic & Islamic Studies teacher. Stud
 mr-mohammed/
 ├── app/
 │   ├── layout.tsx              # Root layout — Cairo font, RTL, PWA meta
-│   ├── page.tsx                # Home page — teacher intro + CTA
+│   ├── page.tsx                # Home page — teacher intro + always-visible student guide
 │   ├── globals.css             # Tailwind + glass effects + slide-up animation
-│   ├── courses/page.tsx        # Course listing + enrollment bottom sheet + Vodafone Cash box
+│   ├── courses/page.tsx        # Course listing + enrollment form + Vodafone Cash box
 │   ├── materials/page.tsx      # Study materials by subject
-│   ├── results/page.tsx        # Student result lookup by name/code
 │   ├── contact/page.tsx        # WhatsApp + phone links (01007050667)
+│   ├── dashboard/page.tsx      # Student dashboard — enrolled courses + sessions + join button
+│   ├── login/page.tsx          # Student login (phone + password)
 │   ├── admin/
-│   │   ├── layout.tsx          # Admin shell — triple-click logo auth guard
-│   │   ├── page.tsx            # Admin dashboard overview
-│   │   ├── courses/page.tsx    # Courses CRUD + per-session meeting links panel
+│   │   ├── layout.tsx          # Admin shell — sidebar nav + mobile hamburger
+│   │   ├── page.tsx            # Admin dashboard overview + teacher guide
+│   │   ├── courses/page.tsx    # Courses CRUD + sessions panel + "Start Now" Jitsi button
+│   │   ├── students/page.tsx   # Student management (approve/reject)
 │   │   ├── enrollments/page.tsx# Enrollment viewer + payment receipt status
+│   │   ├── attendance/page.tsx # Attendance tracking per session
 │   │   ├── materials/page.tsx  # Materials CRUD
-│   │   └── results/page.tsx    # Student results CRUD
+│   │   └── settings/page.tsx   # Admin settings
 │   └── api/
 │       ├── seed/route.ts       # DB migration + seed (run once via GET /api/seed)
 │       ├── auth/route.ts       # POST — bcrypt password check → token
@@ -41,7 +44,7 @@ mr-mohammed/
 │       │   ├── route.ts        # GET all / POST new
 │       │   └── [id]/route.ts   # PUT / DELETE
 │       ├── sessions/
-│       │   ├── route.ts        # GET ?courseId=X / POST new session
+│       │   ├── route.ts        # GET ?courseId=X / POST new (auto-generates room name)
 │       │   └── [id]/route.ts   # DELETE
 │       ├── enrollments/
 │       │   ├── route.ts        # GET all / POST new enrollment
@@ -49,16 +52,20 @@ mr-mohammed/
 │       ├── materials/
 │       │   ├── route.ts        # GET all / POST new
 │       │   └── [id]/route.ts   # PUT / DELETE
-│       └── results/
-│           ├── route.ts        # GET all / POST new
-│           └── [id]/route.ts   # PUT / DELETE
+│       ├── student/
+│       │   ├── login/route.ts  # Student login → JWT cookie
+│       │   ├── logout/route.ts # Clear cookie
+│       │   └── dashboard/route.ts # Auth-gated: return student + courses + sessions
+│       └── attendance/route.ts # Attendance CRUD
 ├── components/
 │   ├── Header.tsx              # Back-arrow header with title
-│   └── BottomNav.tsx           # PWA bottom navigation (4 tabs)
+│   ├── BottomNav.tsx           # PWA bottom navigation (Home, Courses, دروسي, Materials, Contact)
+│   └── JitsiSession.tsx        # Jitsi Meet iframe embed (External API, configOverwrite)
 ├── db/
-│   ├── schema.ts               # All 6 tables (all prefixed mrm_)
+│   ├── schema.ts               # All tables (prefixed mrm_)
 │   └── index.ts                # Neon + Drizzle client
 ├── public/                     # PWA icons, manifest
+├── middleware.ts               # Route protection
 ├── vercel.json                 # alias: mohammedcourses.vercel.app
 └── package.json
 ```
@@ -84,7 +91,7 @@ mr-mohammed/
 | schedule_text | varchar(255) | Free-form e.g. "السبت 8 مساءً" |
 | status | varchar(20) | `open` / `upcoming` / `closed` |
 | max_students | integer | 0 = unlimited |
-| price | decimal(10,2) | nullable — shown in enrollment form |
+| price | decimal(10,2) | nullable |
 | created_at | timestamp | |
 
 ### `mrm_sessions`
@@ -92,8 +99,19 @@ mr-mohammed/
 |--------|------|-------|
 | id | serial PK | |
 | course_id | integer FK → mrm_courses.id | |
-| title | varchar(255) | Free-form label (e.g. "الحصة الأولى", date, topic) |
-| meeting_link | text | Teams / Zoom / Meet URL |
+| title | varchar(255) | Free-form label |
+| meeting_link | text | Auto-generated: `mrm-{random}` — used as Jitsi room name |
+| scheduled_at | timestamp | nullable — set by teacher via date+time picker |
+| created_at | timestamp | |
+
+### `mrm_students`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial PK | |
+| name | varchar(255) | |
+| phone | varchar(30) | unique login identifier |
+| password_hash | text | bcrypt |
+| status | varchar(20) | `pending` / `active` / `blocked` |
 | created_at | timestamp | |
 
 ### `mrm_enrollments`
@@ -101,10 +119,8 @@ mr-mohammed/
 |--------|------|-------|
 | id | serial PK | |
 | course_id | integer FK → mrm_courses.id | |
-| student_name | varchar(255) | |
-| student_phone | varchar(30) | |
-| student_email | varchar(255) | nullable |
-| payment_ref | varchar(100) | Vodafone Cash receipt number (optional) |
+| student_id | integer FK → mrm_students.id | |
+| payment_ref | varchar(100) | Vodafone Cash receipt (optional) |
 | status | varchar(20) | `pending` / `confirmed` / `cancelled` |
 | created_at | timestamp | |
 
@@ -119,62 +135,61 @@ mr-mohammed/
 | url | text | |
 | created_at | timestamp | |
 
-### `mrm_results`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | serial PK | |
-| student_name | varchar(255) | |
-| student_code | varchar(50) | nullable |
-| subject | varchar(100) | |
-| exam_name | varchar(255) | |
-| score | decimal(5,2) | |
-| max_score | decimal(5,2) | default 100 |
-| created_at | timestamp | |
-
 ---
 
 ## Routes
 
 | Route | Purpose |
 |-------|---------|
-| `/` | Home — teacher intro, subject badges, CTA buttons |
-| `/courses` | Course cards + enrollment bottom sheet |
+| `/` | Home — teacher intro, quick tabs, always-visible student guide |
+| `/courses` | Course cards + enrollment form + Vodafone Cash box |
 | `/materials` | Study materials filtered by subject |
-| `/results` | Student grade lookup |
 | `/contact` | WhatsApp + phone (01007050667) |
+| `/login` | Student login (phone + password) |
+| `/dashboard` | Student dashboard — enrolled courses, sessions, "🎥 دخول الحصة" button |
 | `/admin` | Hidden — triple-click logo to reveal password prompt |
-| `/admin/courses` | Course CRUD + per-session meeting links |
+| `/admin/courses` | Course CRUD + sessions (date/time picker) + "▶ ابدأ الحصة الآن" Jitsi button |
+| `/admin/students` | Student approval/rejection |
 | `/admin/enrollments` | View enrollments + payment receipt status |
+| `/admin/attendance` | Attendance tracking |
 | `/admin/materials` | Material CRUD |
-| `/admin/results` | Student result CRUD |
+| `/admin/settings` | Admin settings |
 | `/api/seed` | GET — runs all migrations + seeds default password |
 
 ---
 
 ## Key Features
 
+### Live Video Sessions (Jitsi)
+- Teacher clicks "▶ ابدأ الحصة الآن" → Jitsi opens fullscreen inside the site
+- Student clicks "🎥 دخول الحصة" → same Jitsi room opens fullscreen
+- Room name is auto-generated server-side (`mrm-{random}`) — teacher never sees or touches a link
+- Jitsi embedded via `JitsiMeetExternalAPI` (External API from `meet.jit.si/external_api.js`)
+- `configOverwrite: { prejoinPageEnabled: false }` disables pre-join/lobby
+- Teacher shown as "الأستاذ محمد", student shown with their actual name
+
 ### Admin auth
 - Triple-click logo on any `/admin/*` page → password modal appears
-- `useRef` counter avoids stale closure on click
 - Token stored in `sessionStorage` — clears on tab close
 
-### Vodafone Cash enrollment
-- When a course has a price, the enrollment form shows the amount prominently: "حوّل X جنيه على فودافون كاش: 01007050667"
-- Optional receipt number field (`payment_ref`) — admin sees green "💳 إيصال: [number]" or amber "لم يُرسل إيصال بعد"
+### Student auth
+- Register via course enrollment form → admin approves account
+- Login at `/login` → JWT in httpOnly cookie (30-day)
+- Dashboard shows only confirmed enrollments and their sessions
 
-### Per-session meeting links
-- No fixed link per course — teacher adds free-form sessions (any label + any URL)
-- Admin clicks "📎 الحصص" on any course → inline panel to add/copy/delete session links
-- Copy button shows "تم النسخ ✓" for 2 seconds
+### Vodafone Cash enrollment
+- When a course has a price: "حوّل X جنيه على فودافون كاش: 01007050667"
+- Optional receipt number field (`payment_ref`)
+
+### Guides
+- Teacher guide: always visible on admin pages (amber box, non-collapsible)
+- Student guide: always visible on home page and dashboard (blue box, non-collapsible)
 
 ---
 
 ## How to Deploy
 
-```bash
-cd /home/sherif/sites/mr-mohammed
-vercel --prod
-```
+Push to GitHub → Vercel auto-deploys (no manual `vercel --prod` needed).
 
 **Required env var (Vercel dashboard):**
 - `DATABASE_URL` — Neon PostgreSQL connection string
@@ -185,24 +200,26 @@ vercel --prod
 
 ## How to Continue
 
-- **Change admin password:** Go to `/api/seed` or run `UPDATE mrm_admin_settings SET value = '$2b$...' WHERE key = 'password'`
+- **Change admin password:** Update via admin settings or run SQL: `UPDATE mrm_admin_settings SET value = '$2b$...' WHERE key = 'password'`
 - **Add a subject:** Update the `SUBJECTS` array in `app/admin/courses/page.tsx`
-- **Change phone/WhatsApp:** `app/contact/page.tsx` and `app/courses/page.tsx` (Vodafone Cash box)
-- **Change Vodafone Cash number:** Search for `01007050667` — appears in `contact/page.tsx` and `courses/page.tsx`
+- **Change phone/WhatsApp:** `app/contact/page.tsx` and `app/courses/page.tsx`
 - **DB direct access:** Neon console or `psql $DATABASE_URL`
 
 ---
 
-## Audit Status — 2026-07-21 ✓
+## Audit Status — 2026-07-23 ✓
 
-| Page | Mobile | Arabic RTL | Admin |
-|------|--------|-----------|-------|
-| Home | ✓ | ✓ | — |
-| Courses + Enrollment | ✓ | ✓ | ✓ |
-| Materials | ✓ | ✓ | ✓ |
-| Results | ✓ | ✓ | ✓ |
-| Contact | ✓ | ✓ | — |
-| Admin — Courses + Sessions | ✓ | ✓ | ✓ |
-| Admin — Enrollments | ✓ | ✓ | ✓ |
-| Admin — Materials | ✓ | ✓ | ✓ |
-| Admin — Results | ✓ | ✓ | ✓ |
+| Page | Mobile | Desktop | Arabic RTL | Notes |
+|------|--------|---------|-----------|-------|
+| Home | ✓ | ✓ | ✓ | Always-visible student guide |
+| Courses + Enrollment | ✓ | ✓ | ✓ | |
+| Materials | ✓ | ✓ | ✓ | |
+| Contact | ✓ | ✓ | ✓ | |
+| Student Login | ✓ | ✓ | ✓ | |
+| Student Dashboard | ✓ | ✓ | ✓ | Jitsi join button |
+| Admin — Overview | ✓ | ✓ | ✓ | Teacher guide |
+| Admin — Courses + Sessions | ✓ | ✓ | ✓ | Date/time picker + Jitsi start |
+| Admin — Students | ✓ | ✓ | ✓ | |
+| Admin — Enrollments | ✓ | ✓ | ✓ | |
+| Admin — Attendance | ✓ | ✓ | ✓ | |
+| Admin — Materials | ✓ | ✓ | ✓ | |
