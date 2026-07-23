@@ -114,6 +114,7 @@ export default function AdminCourses() {
             <JitsiSession
               roomName={activeSession.roomName}
               displayName="الأستاذ محمد"
+              isTeacher={true}
               onClose={() => setActiveSession(null)}
             />
           </div>
@@ -132,8 +133,8 @@ export default function AdminCourses() {
           {[
             { n: "١", t: "أضف دورة جديدة بعنوانها وموضوعها وسعرها." },
             { n: "٢", t: "اضغط \"📎 الحصص\" في الدورة وأضف مواعيد كل حصة باسمها وتاريخها ووقتها." },
-            { n: "٣", t: "عند موعد الحصة، اضغط \"▶ ابدأ الحصة الآن\" — الفيديو يفتح مباشرة بدون أي خطوات." },
-            { n: "٤", t: "الطلاب المقبولون يرون نفس الحصة ويدخلون بضغطة واحدة من لوحة تحكمهم." },
+            { n: "٣", t: "عند موعد الحصة، اضغط \"▶ ابدأ الحصة الآن\" — يفتح الفيديو، اضغط \"Join meeting\" للدخول." },
+            { n: "٤", t: "بعد دخولك، يدخل الطلاب تلقائياً بدون أي موافقة منك — فقط انتظرهم يظهرون على الشاشة." },
           ].map(s => (
             <div key={s.n} className="flex gap-2 items-start">
               <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-900 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">{s.n}</span>

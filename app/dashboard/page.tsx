@@ -126,8 +126,8 @@ export default function DashboardPage() {
             <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-2">
               <p className="font-black text-[#1a3a6b] text-sm">📖 كيف تدخل حصتك؟</p>
               <div className="space-y-1.5 text-xs text-blue-800">
-                <p>• عند موعد الحصة، اضغط <span className="font-bold">🎥 دخول الحصة</span> — الفيديو يفتح مباشرة.</p>
-                <p>• تأكد أن الأستاذ قد بدأ الجلسة أولاً، ثم انضم بعده بدقيقة.</p>
+                <p>• عند موعد الحصة، اضغط <span className="font-bold">🎥 دخول الحصة</span> — يفتح الفيديو، اضغط <span className="font-bold">Join meeting</span> للدخول.</p>
+                <p>• تأكد أن الأستاذ قد بدأ الجلسة أولاً — ستدخل تلقائياً بعده.</p>
                 <p>• الكاميرا والميكروفون اختياريان — يمكنك إيقافهما من داخل الحصة.</p>
                 <p>• للخروج من الحصة اضغط ✕ في أعلى الشاشة.</p>
               </div>

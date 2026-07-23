@@ -9,10 +9,12 @@ export default function JitsiSession({
   roomName,
   displayName,
   onClose,
+  isTeacher = false,
 }: {
   roomName: string;
   displayName: string;
   onClose?: () => void;
+  isTeacher?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<any>(null);
@@ -31,17 +33,32 @@ export default function JitsiSession({
         startWithVideoMuted: false,
         startWithAudioMuted: false,
         enableWelcomePage: false,
+        enableLobbyChat: false,
       },
       interfaceConfigOverwrite: {
         SHOW_JITSI_WATERMARK: false,
         SHOW_WATERMARK_FOR_GUESTS: false,
         TOOLBAR_BUTTONS: ["microphone", "camera", "hangup", "tileview", "chat"],
-        DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
       },
       userInfo: { displayName },
     });
+
     apiRef.current.addEventListener("readyToClose", () => onClose?.());
-  }, [roomName, displayName, onClose]);
+
+    if (isTeacher) {
+      // When teacher joins as moderator: disable lobby so students enter directly
+      apiRef.current.addEventListener("videoConferenceJoined", () => {
+        try { apiRef.current?.executeCommand("toggleLobby", false); } catch (_) {}
+      });
+      // Auto-admit any student who is still waiting (safety net)
+      apiRef.current.addEventListener("knockingParticipant", (e: any) => {
+        try {
+          const id = e?.participant?.id;
+          if (id) apiRef.current?.executeCommand("answerKnockingParticipant", id, true);
+        } catch (_) {}
+      });
+    }
+  }, [roomName, displayName, onClose, isTeacher]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
