@@ -53,28 +53,23 @@ export default function HomePage() {
 
       {/* Student Getting Started Guide */}
       <section className="max-w-lg mx-auto w-full px-4 mt-5">
-        <details className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
-          <summary className="px-5 py-4 cursor-pointer font-bold text-[#1a3a6b] text-sm flex items-center justify-between select-none list-none">
-            <span>🎓 كيف تبدأ؟ — خطوات التسجيل</span>
-            <span className="text-blue-400 text-xs font-normal">اضغط للعرض</span>
-          </summary>
-          <div className="px-5 pb-5 pt-2 space-y-3">
-            {[
-              { step: "١", title: "اختر الدورة", body: 'اضغط "الدورات"، اختر الدورة المناسبة واضغط "سجّل الآن".' },
-              { step: "٢", title: "ادفع الرسوم", body: 'حوّل رسوم الاشتراك عبر فودافون كاش على الرقم المكتوب في نموذج التسجيل، ثم أدخل رقم الإيصال.' },
-              { step: "٣", title: "انتظر تأكيد الأستاذ", body: 'سيراجع الأستاذ طلبك ويقبله — ستظهر الحصص في لوحتك بعد القبول.' },
-              { step: "٤", title: "دخول الحصة", body: 'عند موعد الحصة، اضغط "دروسي" ثم اضغط "🎥 دخول الحصة" — الفيديو يفتح مباشرة.' },
-            ].map(s => (
-              <div key={s.step} className="flex gap-3">
-                <span className="w-7 h-7 rounded-full bg-[#1a3a6b] text-white font-black text-sm flex items-center justify-center shrink-0 mt-0.5">{s.step}</span>
-                <div>
-                  <p className="font-bold text-[#1a3a6b] text-sm">{s.title}</p>
-                  <p className="text-blue-700 text-xs leading-relaxed mt-0.5">{s.body}</p>
-                </div>
+        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 space-y-3">
+          <p className="font-black text-[#1a3a6b] text-sm">🎓 كيف تبدأ؟ — خطوات التسجيل</p>
+          {[
+            { step: "١", title: "اختر الدورة", body: 'اضغط "الدورات"، اختر الدورة المناسبة واضغط "سجّل الآن".' },
+            { step: "٢", title: "ادفع الرسوم", body: 'حوّل رسوم الاشتراك عبر فودافون كاش على الرقم المكتوب في نموذج التسجيل، ثم أدخل رقم الإيصال.' },
+            { step: "٣", title: "انتظر تأكيد الأستاذ", body: 'سيراجع الأستاذ طلبك ويقبله — ستظهر الحصص في لوحتك بعد القبول.' },
+            { step: "٤", title: "دخول الحصة", body: 'عند موعد الحصة، اضغط "دروسي" ثم اضغط "🎥 دخول الحصة" — الفيديو يفتح مباشرة.' },
+          ].map(s => (
+            <div key={s.step} className="flex gap-3">
+              <span className="w-7 h-7 rounded-full bg-[#1a3a6b] text-white font-black text-sm flex items-center justify-center shrink-0 mt-0.5">{s.step}</span>
+              <div>
+                <p className="font-bold text-[#1a3a6b] text-sm">{s.title}</p>
+                <p className="text-blue-700 text-xs leading-relaxed mt-0.5">{s.body}</p>
               </div>
-            ))}
-          </div>
-        </details>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* About strip */}
