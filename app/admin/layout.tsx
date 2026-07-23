@@ -10,7 +10,6 @@ const navItems = [
   { href: "/admin/enrollments", label: "التسجيلات", icon: "👥" },
   { href: "/admin/attendance", label: "الحضور", icon: "📋" },
   { href: "/admin/materials", label: "المواد", icon: "📚" },
-  { href: "/admin/results", label: "النتائج", icon: "📊" },
   { href: "/admin/settings", label: "الإعدادات", icon: "⚙️" },
 ];
 

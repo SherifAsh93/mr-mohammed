@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import JitsiSession from "@/components/JitsiSession";
 
 type Course = { id: number; title: string; description: string | null; subject: string; scheduleText: string | null; status: string; maxStudents: number | null; price: string | null; };
-type Session = { id: number; courseId: number; title: string; meetingLink: string; scheduledAt: string | null; recordedUrl: string | null; createdAt: string; };
+type Session = { id: number; courseId: number; title: string; meetingLink: string; scheduledAt: string | null; };
 
 const SUBJECTS = ["اللغة العربية", "التربية الإسلامية", "التجويد وعلوم القرآن", "النحو والصرف", "أخرى"];
 const STATUSES = [{ value: "open", label: "مفتوح للتسجيل" }, { value: "upcoming", label: "قادم قريبًا" }, { value: "closed", label: "مكتمل / مغلق" }];
@@ -18,12 +19,9 @@ export default function AdminCourses() {
 
   const [expandedCourse, setExpandedCourse] = useState<number | null>(null);
   const [sessions, setSessions] = useState<Record<number, Session[]>>({});
-  const [sessForm, setSessForm] = useState({ title: "", meetingLink: "", scheduledAt: "" });
+  const [sessForm, setSessForm] = useState({ title: "", date: "", time: "" });
   const [sessLoading, setSessLoading] = useState(false);
-  const [copied, setCopied] = useState<number | null>(null);
-  const [youtubeInput, setYoutubeInput] = useState<Record<number, string>>({});
-  const [youtubeSaving, setYoutubeSaving] = useState<number | null>(null);
-  const [editingRecording, setEditingRecording] = useState<Set<number>>(new Set());
+  const [activeSession, setActiveSession] = useState<{ id: number; roomName: string; title: string } | null>(null);
 
   function load() { fetch("/api/courses").then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : [])); }
   useEffect(() => { load(); }, []);
@@ -55,7 +53,7 @@ export default function AdminCourses() {
   async function toggleSessions(courseId: number) {
     if (expandedCourse === courseId) { setExpandedCourse(null); return; }
     setExpandedCourse(courseId);
-    setSessForm({ title: "", meetingLink: "", scheduledAt: "" });
+    setSessForm({ title: "", date: "", time: "" });
     if (!sessions[courseId]) {
       const data = await fetch(`/api/sessions?courseId=${courseId}`).then(r => r.json());
       setSessions(prev => ({ ...prev, [courseId]: Array.isArray(data) ? data : [] }));
@@ -63,14 +61,21 @@ export default function AdminCourses() {
   }
 
   async function addSession(courseId: number) {
-    if (!sessForm.title || !sessForm.meetingLink) return;
+    if (!sessForm.title) return;
     setSessLoading(true);
     try {
-      const res = await fetch("/api/sessions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ courseId, ...sessForm }) });
+      const scheduledAt = sessForm.date
+        ? `${sessForm.date}T${sessForm.time || "00:00"}:00`
+        : null;
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId, title: sessForm.title, scheduledAt }),
+      });
       const data = await res.json();
       if (data.ok) {
         setSessions(prev => ({ ...prev, [courseId]: [...(prev[courseId] || []), data.data] }));
-        setSessForm({ title: "", meetingLink: "", scheduledAt: "" });
+        setSessForm({ title: "", date: "", time: "" });
       }
     } finally { setSessLoading(false); }
   }
@@ -78,42 +83,7 @@ export default function AdminCourses() {
   async function deleteSession(sessionId: number, courseId: number) {
     await fetch(`/api/sessions/${sessionId}`, { method: "DELETE" });
     setSessions(prev => ({ ...prev, [courseId]: prev[courseId].filter(s => s.id !== sessionId) }));
-  }
-
-  function copyLink(sessionId: number, link: string) {
-    navigator.clipboard.writeText(link);
-    setCopied(sessionId);
-    setTimeout(() => setCopied(null), 2000);
-  }
-
-  async function saveYoutubeUrl(sessionId: number, courseId: number, url: string) {
-    if (!url.trim()) return;
-    setYoutubeSaving(sessionId);
-    try {
-      await fetch(`/api/sessions/${sessionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recordedUrl: url.trim() }),
-      });
-      setSessions(prev => ({
-        ...prev,
-        [courseId]: prev[courseId].map(s => s.id === sessionId ? { ...s, recordedUrl: url.trim() } : s),
-      }));
-      setYoutubeInput(prev => ({ ...prev, [sessionId]: "" }));
-      setEditingRecording(prev => { const n = new Set(prev); n.delete(sessionId); return n; });
-    } finally {
-      setYoutubeSaving(null);
-    }
-  }
-
-  function startEditRecording(sessionId: number, currentUrl: string | null) {
-    setYoutubeInput(prev => ({ ...prev, [sessionId]: currentUrl || "" }));
-    setEditingRecording(prev => new Set(prev).add(sessionId));
-  }
-
-  function generateJitsiLink() {
-    const suffix = Math.random().toString(36).slice(2, 8);
-    setSessForm(prev => ({ ...prev, meetingLink: `https://meet.jit.si/درس-${suffix}` }));
+    if (activeSession?.id === sessionId) setActiveSession(null);
   }
 
   function formatDate(iso: string | null) {
@@ -125,45 +95,53 @@ export default function AdminCourses() {
 
   return (
     <div className="space-y-5">
+      {/* Fullscreen Jitsi session overlay */}
+      {activeSession && (
+        <div className="fixed inset-0 z-[200] bg-[#0d2347] flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-[#1a3a6b] shrink-0">
+            <div>
+              <p className="text-white font-black text-sm">🎥 {activeSession.title}</p>
+              <p className="text-white/50 text-xs">أنت متصل كـ: الأستاذ محمد</p>
+            </div>
+            <button
+              onClick={() => setActiveSession(null)}
+              className="text-white/70 hover:text-white text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 min-h-0">
+            <JitsiSession
+              roomName={activeSession.roomName}
+              displayName="الأستاذ محمد"
+              onClose={() => setActiveSession(null)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-black text-[#1a3a6b]">🎓 الدورات</h1>
         <button onClick={openAdd} className="bg-[#1a3a6b] text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-[#122a52] transition-colors">+ دورة جديدة</button>
       </div>
 
-      {/* Teacher Guide */}
-      <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
-        <summary className="px-4 py-3.5 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
-          <span>📖 دليل إدارة الدورات والحصص</span>
-          <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
-        </summary>
-        <div className="px-4 pb-4 pt-1 space-y-3 text-xs text-amber-800">
-          <div className="space-y-2">
-            <p className="font-black text-amber-900 text-sm">🎓 إنشاء دورة</p>
-            <p>اضغط "+ دورة جديدة"، أضف العنوان والمادة والموعد والسعر، ثم اضغط "إضافة الدورة".</p>
-          </div>
-          <div className="space-y-2">
-            <p className="font-black text-amber-900 text-sm">📎 إضافة حصة بـ Jitsi Meet (مجاني)</p>
-            <ol className="space-y-1 list-none">
-              <li>١. افتح الدورة واضغط "الحصص"</li>
-              <li>٢. اضغط "🔗 توليد رابط Jitsi" — سيتعبّأ الرابط تلقائياً</li>
-              <li>٣. أضف اسم الحصة والتاريخ ثم اضغط "+ إضافة حصة"</li>
-              <li>٤. عند وقت الحصة، افتح الرابط وستدخل مباشرة — لا يحتاج حساب</li>
-            </ol>
-          </div>
-          <div className="space-y-2">
-            <p className="font-black text-amber-900 text-sm">🎬 تسجيل الحصة على يوتيوب</p>
-            <ol className="space-y-1 list-none">
-              <li>١. داخل Jitsi، اضغط النقاط الثلاث ⋮ ← "Start recording" أو "Start YouTube Live"</li>
-              <li>٢. إذا اخترت Live: أدخل Stream Key من يوتيوب ستوديو</li>
-              <li>٣. بعد انتهاء الحصة، الفيديو يُحفظ تلقائياً في قناتك</li>
-              <li>٤. افتح الفيديو على يوتيوب، انسخ الرابط، والصقه في حقل "رابط التسجيل" بجانب الحصة</li>
-            </ol>
-          </div>
-          <div className="bg-amber-100 rounded-xl p-3">
-            <p className="font-semibold">💡 الطلاب المقبولون يشوفون الرابط ورابط التسجيل تلقائياً في لوحة التحكم الخاصة بهم.</p>
-          </div>
+      {/* Teacher guide */}
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 space-y-2.5">
+        <p className="font-black text-amber-900 text-sm">📖 دليل الأستاذ — إدارة الدورات والحصص</p>
+        <div className="space-y-2 text-xs text-amber-800">
+          {[
+            { n: "١", t: "أضف دورة جديدة بعنوانها وموضوعها وسعرها." },
+            { n: "٢", t: "اضغط \"📎 الحصص\" في الدورة وأضف مواعيد كل حصة باسمها وتاريخها ووقتها." },
+            { n: "٣", t: "عند موعد الحصة، اضغط \"▶ ابدأ الحصة الآن\" — الفيديو يفتح مباشرة بدون أي خطوات." },
+            { n: "٤", t: "الطلاب المقبولون يرون نفس الحصة ويدخلون بضغطة واحدة من لوحة تحكمهم." },
+          ].map(s => (
+            <div key={s.n} className="flex gap-2 items-start">
+              <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-900 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">{s.n}</span>
+              <p className="leading-relaxed">{s.t}</p>
+            </div>
+          ))}
         </div>
-      </details>
+      </div>
 
       {msg && <p className={`text-sm font-semibold ${msg.includes("✓") ? "text-green-600" : "text-red-500"}`}>{msg}</p>}
 
@@ -258,54 +236,49 @@ export default function AdminCourses() {
                   <button onClick={() => toggleSessions(c.id)}
                     className="text-[#c9860a] text-xs font-bold hover:underline mr-auto flex items-center gap-1">
                     📎 الحصص {sessions[c.id] ? `(${sessions[c.id].length})` : ""}
-                    <span className={`transition-transform ${expandedCourse === c.id ? "rotate-180" : ""}`}>▾</span>
+                    <span className={`transition-transform inline-block ${expandedCourse === c.id ? "rotate-180" : ""}`}>▾</span>
                   </button>
                 </div>
               </div>
 
               {expandedCourse === c.id && (
                 <div className="border-t border-gray-100 bg-gray-50 p-4 space-y-4">
-                  <p className="text-xs font-black text-gray-500 uppercase tracking-wide">الحصص</p>
-
-                  {/* Meeting link instructions */}
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 space-y-2">
-                    <p className="text-xs font-black text-blue-700">🎥 Jitsi Meet — مجاني بالكامل بدون حساب</p>
-                    <ol className="space-y-1 text-xs text-blue-600">
-                      <li><span className="font-bold">١.</span> اضغط "🔗 توليد رابط Jitsi" أدناه — سيتعبّأ الرابط تلقائياً</li>
-                      <li><span className="font-bold">٢.</span> أو اذهب لـ <span dir="ltr" className="font-medium">meet.jit.si</span> وابدأ غرفة جديدة بأي اسم</li>
-                      <li><span className="font-bold">٣.</span> الطلاب يدخلون الغرفة بنفس الرابط — كاميرا اختيارية للجميع</li>
-                    </ol>
-                    <p className="text-xs text-blue-500">✅ مجاني — حتى 100 مشارك — للتسجيل على يوتيوب: ⋮ ← Start recording</p>
-                  </div>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-wide">الحصص</p>
 
                   {/* Add session form */}
                   <div className="bg-white rounded-xl border border-gray-200 p-3 space-y-2">
-                    <input value={sessForm.title} onChange={e => setSessForm({ ...sessForm, title: e.target.value })}
+                    <p className="text-xs font-bold text-gray-500">إضافة حصة جديدة</p>
+                    <input
+                      value={sessForm.title}
+                      onChange={e => setSessForm({ ...sessForm, title: e.target.value })}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
-                      placeholder="اسم الحصة (مثال: الحصة الأولى، النحو — الفاعل)" />
-                    <div className="flex gap-2">
-                      <input value={sessForm.meetingLink} onChange={e => setSessForm({ ...sessForm, meetingLink: e.target.value })}
-                        className="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
-                        placeholder="رابط الاجتماع" dir="ltr" />
-                      <button
-                        type="button"
-                        onClick={generateJitsiLink}
-                        className="shrink-0 bg-blue-600 text-white text-xs font-bold px-3 py-2.5 rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-                      >
-                        🔗 Jitsi
-                      </button>
+                      placeholder="اسم الحصة (مثال: الحصة الأولى — النحو)"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 mb-1">التاريخ</label>
+                        <input
+                          type="date"
+                          value={sessForm.date}
+                          onChange={e => setSessForm({ ...sessForm, date: e.target.value })}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 mb-1">الوقت</label>
+                        <input
+                          type="time"
+                          value={sessForm.time}
+                          onChange={e => setSessForm({ ...sessForm, time: e.target.value })}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 mb-1">تاريخ ووقت الحصة</label>
-                      <input
-                        type="datetime-local"
-                        value={sessForm.scheduledAt}
-                        onChange={e => setSessForm({ ...sessForm, scheduledAt: e.target.value })}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]"
-                      />
-                    </div>
-                    <button onClick={() => addSession(c.id)} disabled={sessLoading || !sessForm.title || !sessForm.meetingLink}
-                      className="w-full bg-[#1a3a6b] text-white py-2.5 rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-[#122a52] transition-colors">
+                    <button
+                      onClick={() => addSession(c.id)}
+                      disabled={sessLoading || !sessForm.title}
+                      className="w-full bg-[#1a3a6b] text-white py-2.5 rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-[#122a52] transition-colors"
+                    >
                       {sessLoading ? "جاري الإضافة..." : "+ إضافة حصة"}
                     </button>
                   </div>
@@ -314,77 +287,34 @@ export default function AdminCourses() {
                   {!sessions[c.id] ? (
                     <p className="text-center text-gray-400 text-xs py-2">جاري التحميل...</p>
                   ) : sessions[c.id].length === 0 ? (
-                    <p className="text-center text-gray-400 text-xs py-2">لا توجد حصص بعد — أضف أول رابط</p>
+                    <p className="text-center text-gray-400 text-xs py-2">لا توجد حصص بعد — أضف أول حصة</p>
                   ) : (
                     <div className="space-y-2">
-                      {sessions[c.id].map(s => {
-                        return (
-                          <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-3 space-y-2">
-                            <div className="flex items-start gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-bold text-[#1a3a6b] text-xs">{s.title}</p>
-                                {s.scheduledAt && (
-                                  <p className="text-gray-400 text-xs mt-0.5">🗓 {formatDate(s.scheduledAt)}</p>
-                                )}
-                                <p className="text-gray-300 text-xs truncate mt-0.5" dir="ltr">{s.meetingLink}</p>
-                              </div>
-                              <div className="flex gap-1.5 shrink-0">
-                                <button onClick={() => copyLink(s.id, s.meetingLink)}
-                                  className={`text-xs font-bold px-2.5 py-1.5 rounded-lg transition-colors ${
-                                    copied === s.id ? "bg-green-100 text-green-700" : "bg-[#eef1fb] text-[#1a3a6b]"
-                                  }`}>
-                                  {copied === s.id ? "✓" : "نسخ"}
-                                </button>
-                                <button onClick={() => deleteSession(s.id, c.id)} className="text-gray-300 hover:text-red-500 text-lg leading-none px-1">×</button>
-                              </div>
-                            </div>
-
-                            {/* YouTube recording */}
-                            <div className="border-t border-gray-50 pt-2">
-                              {s.recordedUrl && !editingRecording.has(s.id) ? (
-                                <div className="flex items-center gap-2">
-                                  <a href={s.recordedUrl} target="_blank" rel="noopener noreferrer"
-                                    className="text-xs font-bold text-red-700 bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                                    ▶ يوتيوب — مشاهدة التسجيل
-                                  </a>
-                                  <button
-                                    onClick={() => startEditRecording(s.id, s.recordedUrl)}
-                                    className="text-xs text-gray-400 hover:text-gray-600"
-                                  >
-                                    تغيير
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="flex gap-2">
-                                  <input
-                                    type="url"
-                                    value={youtubeInput[s.id] || ""}
-                                    onChange={e => setYoutubeInput(prev => ({ ...prev, [s.id]: e.target.value }))}
-                                    placeholder="رابط يوتيوب — https://youtube.com/watch?v=..."
-                                    dir="ltr"
-                                    className="flex-1 border border-dashed border-red-200 rounded-lg px-3 py-2 text-xs text-gray-600 focus:outline-none focus:border-red-400 placeholder:text-gray-300"
-                                  />
-                                  <button
-                                    disabled={!youtubeInput[s.id]?.trim() || youtubeSaving === s.id}
-                                    onClick={() => saveYoutubeUrl(s.id, c.id, youtubeInput[s.id] || "")}
-                                    className="text-xs font-bold px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-40 transition-colors whitespace-nowrap"
-                                  >
-                                    {youtubeSaving === s.id ? "..." : "💾 حفظ"}
-                                  </button>
-                                  {editingRecording.has(s.id) && (
-                                    <button
-                                      onClick={() => { setEditingRecording(prev => { const n = new Set(prev); n.delete(s.id); return n; }); }}
-                                      className="text-xs text-gray-400 hover:text-gray-600 px-2"
-                                    >
-                                      إلغاء
-                                    </button>
-                                  )}
-                                </div>
+                      {sessions[c.id].map(s => (
+                        <div key={s.id} className="bg-white rounded-xl border border-gray-100 p-3 space-y-2.5">
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-[#1a3a6b] text-sm">{s.title}</p>
+                              {s.scheduledAt && (
+                                <p className="text-gray-400 text-xs mt-0.5">🗓 {formatDate(s.scheduledAt)}</p>
                               )}
                             </div>
+                            <button
+                              onClick={() => deleteSession(s.id, c.id)}
+                              className="text-gray-300 hover:text-red-500 text-xl leading-none px-1 shrink-0 transition-colors"
+                            >
+                              ×
+                            </button>
                           </div>
-                        );
-                      })}
+                          <button
+                            onClick={() => setActiveSession({ id: s.id, roomName: s.meetingLink, title: s.title })}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+                          >
+                            <span>▶</span>
+                            <span>ابدأ الحصة الآن</span>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

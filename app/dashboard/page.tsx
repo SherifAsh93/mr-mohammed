@@ -2,25 +2,25 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import JitsiSession from "@/components/JitsiSession";
 
-type Session = { id: number; title: string; meetingLink: string; scheduledAt: string | null; recordedUrl: string | null; };
+type Session = { id: number; title: string; meetingLink: string; scheduledAt: string | null; };
 type CourseEntry = {
   enrollment: { id: number; courseId: number; paymentRef: string | null; status: string };
   course: { id: number; title: string; subject: string; scheduleText: string | null };
   sessions: Session[];
 };
-type Result = { id: number; subject: string; examName: string; score: string; maxScore: string; createdAt: string; };
 type Material = { id: number; title: string; description: string | null; subject: string; type: string; url: string; };
 
 export default function DashboardPage() {
   const router = useRouter();
   const [student, setStudent] = useState<{ id: number; name: string; phone: string } | null>(null);
   const [courses, setCourses] = useState<CourseEntry[]>([]);
-  const [results, setResults] = useState<Result[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"courses" | "results" | "materials">("courses");
+  const [activeTab, setActiveTab] = useState<"courses" | "materials">("courses");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [activeSession, setActiveSession] = useState<{ roomName: string; title: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/student/dashboard")
@@ -29,7 +29,6 @@ export default function DashboardPage() {
         if (data.error) { router.push("/login"); return; }
         setStudent(data.student);
         setCourses(data.courses || []);
-        setResults(data.results || []);
         setMaterials(data.materials || []);
       })
       .finally(() => setLoading(false));
@@ -48,11 +47,6 @@ export default function DashboardPage() {
     });
   }
 
-  function isUpcoming(iso: string | null) {
-    if (!iso) return true;
-    return new Date(iso) > new Date();
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center">
@@ -63,6 +57,31 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fc]" dir="rtl">
+      {/* Fullscreen Jitsi session overlay */}
+      {activeSession && (
+        <div className="fixed inset-0 z-[200] bg-[#0d2347] flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-[#1a3a6b] shrink-0">
+            <div>
+              <p className="text-white font-black text-sm">🎥 {activeSession.title}</p>
+              <p className="text-white/50 text-xs">أنت متصل كـ: {student?.name}</p>
+            </div>
+            <button
+              onClick={() => setActiveSession(null)}
+              className="text-white/70 hover:text-white text-2xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex-1 min-h-0">
+            <JitsiSession
+              roomName={activeSession.roomName}
+              displayName={student?.name || "طالب"}
+              onClose={() => setActiveSession(null)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-b from-[#1a3a6b] to-[#1e4080] px-4 pt-12 pb-6">
         <div className="max-w-lg mx-auto flex items-start justify-between">
@@ -84,7 +103,6 @@ export default function DashboardPage() {
         <div className="max-w-lg mx-auto flex gap-1 mt-5 bg-white/10 rounded-2xl p-1">
           {([
             { key: "courses", label: "دروسي" },
-            { key: "results", label: "نتائجي" },
             { key: "materials", label: "المواد" },
           ] as const).map(tab => (
             <button
@@ -101,52 +119,20 @@ export default function DashboardPage() {
       </div>
 
       <main className="max-w-lg mx-auto px-4 py-5 space-y-4">
-        {/* Student Guide per tab */}
-        {activeTab === "courses" && (
-          <details className="bg-blue-50 border border-blue-100 rounded-2xl overflow-hidden">
-            <summary className="px-4 py-3 cursor-pointer font-bold text-[#1a3a6b] text-sm flex items-center justify-between select-none list-none">
-              <span>📖 دليل استخدام لوحة الدروس</span>
-              <span className="text-blue-400 text-xs font-normal">اضغط للعرض</span>
-            </summary>
-            <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-blue-800">
-              <p>• ستجد هنا الدورات المؤكدة والحصص المرتبطة بها.</p>
-              <p>• عند قرب موعد الحصة، اضغط <span className="font-bold">🎥 دخول الحصة</span> للانضمام — لا تحتاج حساب ولا تطبيق.</p>
-              <p>• الكاميرا اختيارية — يمكنك الدخول بدونها.</p>
-              <p>• إذا فاتتك الحصة، ابحث عن زر <span className="font-bold text-red-700">مشاهدة على يوتيوب</span> عند ظهوره.</p>
-              <p>• إذا لم تظهر دوراتك، انتظر تأكيد الأستاذ أو تواصل معه.</p>
-            </div>
-          </details>
-        )}
-        {activeTab === "results" && (
-          <details className="bg-teal-50 border border-teal-100 rounded-2xl overflow-hidden">
-            <summary className="px-4 py-3 cursor-pointer font-bold text-teal-700 text-sm flex items-center justify-between select-none list-none">
-              <span>📖 دليل النتائج</span>
-              <span className="text-teal-400 text-xs font-normal">اضغط للعرض</span>
-            </summary>
-            <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-teal-800">
-              <p>• تظهر هنا نتائج اختباراتك وامتحاناتك بعد رصدها من الأستاذ.</p>
-              <p>• الشريط الأخضر = ممتاز (85%+) · الأصفر = جيد · الأحمر = يحتاج مراجعة.</p>
-              <p>• إذا لم تجد نتائجك، تأكد أن الأستاذ أضافها بعد الامتحان.</p>
-            </div>
-          </details>
-        )}
-        {activeTab === "materials" && (
-          <details className="bg-amber-50 border border-amber-100 rounded-2xl overflow-hidden">
-            <summary className="px-4 py-3 cursor-pointer font-bold text-amber-800 text-sm flex items-center justify-between select-none list-none">
-              <span>📖 دليل المواد</span>
-              <span className="text-amber-400 text-xs font-normal">اضغط للعرض</span>
-            </summary>
-            <div className="px-4 pb-4 pt-2 space-y-2 text-xs text-amber-800">
-              <p>• تجد هنا ملفات PDF والفيديوهات والروابط التي رفعها الأستاذ.</p>
-              <p>• اضغط على أي مادة لفتحها في متصفحك أو تحميلها.</p>
-              <p>• إذا لم تجد مواد، تابع — الأستاذ يضيف مواد جديدة بانتظام.</p>
-            </div>
-          </details>
-        )}
-
         {/* MY COURSES TAB */}
         {activeTab === "courses" && (
           <>
+            {/* Student guide */}
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-2">
+              <p className="font-black text-[#1a3a6b] text-sm">📖 كيف تدخل حصتك؟</p>
+              <div className="space-y-1.5 text-xs text-blue-800">
+                <p>• عند موعد الحصة، اضغط <span className="font-bold">🎥 دخول الحصة</span> — الفيديو يفتح مباشرة.</p>
+                <p>• تأكد أن الأستاذ قد بدأ الجلسة أولاً، ثم انضم بعده بدقيقة.</p>
+                <p>• الكاميرا والميكروفون اختياريان — يمكنك إيقافهما من داخل الحصة.</p>
+                <p>• للخروج من الحصة اضغط ✕ في أعلى الشاشة.</p>
+              </div>
+            </div>
+
             {courses.length === 0 ? (
               <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center space-y-4">
                 <div className="text-5xl">📭</div>
@@ -186,47 +172,25 @@ export default function DashboardPage() {
                     {sessions.length === 0 ? (
                       <p className="text-gray-400 text-xs text-center py-2">لا توجد حصص بعد</p>
                     ) : (
-                      sessions.map(s => {
-                        const upcoming = isUpcoming(s.scheduledAt);
-                        return (
-                          <div key={s.id} className={`rounded-2xl border p-4 space-y-2 ${upcoming ? "border-[#1a3a6b]/20 bg-[#f0f4ff]" : "border-gray-100 bg-gray-50"}`}>
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-bold text-[#1a3a6b] text-sm">{s.title}</p>
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${upcoming ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-500"}`}>
-                                {upcoming ? "قادمة" : "انتهت"}
-                              </span>
-                            </div>
+                      sessions.map(s => (
+                        <div key={s.id} className="rounded-2xl border border-[#1a3a6b]/20 bg-[#f0f4ff] p-4 space-y-3">
+                          <div>
+                            <p className="font-bold text-[#1a3a6b] text-sm">{s.title}</p>
                             {s.scheduledAt && (
-                              <p className="text-gray-500 text-xs flex items-center gap-1.5">
+                              <p className="text-gray-500 text-xs flex items-center gap-1.5 mt-1">
                                 🗓 {formatDate(s.scheduledAt)}
                               </p>
                             )}
-                            <div className="flex gap-2 flex-wrap pt-1">
-                              {upcoming && (
-                                <a
-                                  href={s.meetingLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-[#1a3a6b] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
-                                >
-                                  🎥 دخول الحصة
-                                </a>
-                              )}
-                              {s.recordedUrl && (
-                                <a
-                                  href={s.recordedUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5"
-                                >
-                                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.75 15.5V8.5l6.25 3.5-6.25 3.5z"/></svg>
-                                  مشاهدة على يوتيوب
-                                </a>
-                              )}
-                            </div>
                           </div>
-                        );
-                      })
+                          <button
+                            onClick={() => setActiveSession({ roomName: s.meetingLink, title: s.title })}
+                            className="w-full bg-[#1a3a6b] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#122a52] transition-colors active:scale-95"
+                          >
+                            <span>🎥</span>
+                            <span>دخول الحصة</span>
+                          </button>
+                        </div>
+                      ))
                     )}
                   </div>
                 </div>
@@ -235,46 +199,15 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* RESULTS TAB */}
-        {activeTab === "results" && (
-          <>
-            {results.length === 0 ? (
-              <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center space-y-3">
-                <div className="text-5xl">📊</div>
-                <p className="text-gray-500 font-bold">لا توجد نتائج بعد</p>
-                <p className="text-gray-400 text-sm">ستظهر نتائجك هنا بعد الامتحانات</p>
-              </div>
-            ) : (
-              results.map(r => {
-                const pct = Math.round((Number(r.score) / Number(r.maxScore)) * 100);
-                return (
-                  <div key={r.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-bold text-[#1a3a6b] text-sm">{r.examName}</p>
-                        <p className="text-gray-400 text-xs mt-0.5">{r.subject}</p>
-                      </div>
-                      <div className="text-left">
-                        <p className="font-black text-lg text-[#1a3a6b]" dir="ltr">{r.score}/{r.maxScore}</p>
-                        <p className={`text-xs font-bold text-left ${pct >= 50 ? "text-green-600" : "text-red-500"}`}>{pct}%</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 bg-gray-100 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${pct >= 85 ? "bg-green-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400"}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </>
-        )}
-
         {/* MATERIALS TAB */}
         {activeTab === "materials" && (
           <>
+            {/* Student guide */}
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+              <p className="font-black text-amber-900 text-sm mb-1">📚 المواد الدراسية</p>
+              <p className="text-xs text-amber-800">اضغط على أي ملف لفتحه أو تحميله. يضيف الأستاذ مواد جديدة بانتظام.</p>
+            </div>
+
             {materials.length === 0 ? (
               <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center space-y-3">
                 <div className="text-5xl">📂</div>

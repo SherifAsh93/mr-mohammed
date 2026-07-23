@@ -18,10 +18,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { courseId, title, meetingLink, scheduledAt } = await req.json();
-    if (!courseId || !title || !meetingLink) {
+    const { courseId, title, scheduledAt } = await req.json();
+    if (!courseId || !title) {
       return NextResponse.json({ ok: false, error: "بيانات ناقصة" }, { status: 400 });
     }
+    const meetingLink = `mrm-${Math.random().toString(36).slice(2, 10)}${Math.random().toString(36).slice(2, 6)}`;
     const [row] = await db.insert(sessions).values({
       courseId: Number(courseId),
       title,

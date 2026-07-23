@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 const tabs = [
   { href: "/", icon: HomeIcon, label: "الرئيسية" },
   { href: "/courses", icon: CoursesIcon, label: "الدورات" },
-  { href: "/dashboard", icon: DashboardIcon, label: "حسابي" },
-  { href: "/results", icon: ResultsIcon, label: "النتائج" },
+  { href: "/dashboard", icon: DashboardIcon, label: "دروسي" },
+  { href: "/materials", icon: MaterialsIcon, label: "المواد" },
   { href: "/contact", icon: ContactIcon, label: "تواصل" },
 ];
 
