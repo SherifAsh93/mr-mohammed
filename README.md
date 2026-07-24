@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mr. Mohammed — Online Teaching Platform
 
-## Getting Started
+Arabic language and Islamic Studies teacher website. Students register, enroll in courses, pay via Vodafone Cash, and join live video sessions directly in the browser via Jitsi Meet.
 
-First, run the development server:
+**Live:** https://mohammedcourses.vercel.app  
+**Stack:** Next.js 16.2.10 · TypeScript · Tailwind CSS 4 · Neon PostgreSQL · Drizzle ORM · Jitsi Meet  
+**Deployment:** Vercel (auto-deploy on push to `main`)
+
+---
+
+## Quick Start
 
 ```bash
+npm install
+# Create .env.local with DATABASE_URL and STUDENT_JWT_SECRET
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Visit http://localhost:3000/api/seed once to init the database
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Admin Access
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Triple-click the logo on any page → enter password → admin panel at `/admin`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+| Variable | Required |
+|----------|----------|
+| `DATABASE_URL` | Yes — Neon PostgreSQL connection string |
+| `STUDENT_JWT_SECRET` | Yes — JWT signing secret for student sessions |
+| `NEXT_PUBLIC_SITE_URL` | No — canonical URL for OG metadata |
 
-To learn more about Next.js, take a look at the following resources:
+## Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/          # Next.js App Router pages + API routes
+components/   # Header, AdminTrigger, BottomNav, JitsiSession
+db/           # Drizzle schema + Neon client
+lib/          # Student JWT auth helpers
+public/       # PWA icons + manifest
+middleware.ts # Protects /dashboard route
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) for full documentation.

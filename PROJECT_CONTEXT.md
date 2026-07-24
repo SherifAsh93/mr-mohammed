@@ -1,92 +1,160 @@
-# Mr. Mohammed — PROJECT_CONTEXT
+# Project Overview
 
-## What It Does
+**Mr. Mohammed** is an online teaching platform for an Arabic language and Islamic Studies teacher. Students register via phone number, enroll in courses, pay via Vodafone Cash, and join live video sessions directly inside the website. The teacher manages everything through a hidden admin panel accessed by triple-clicking the site logo.
 
-Online teaching platform for an Arabic & Islamic Studies teacher. Students register with phone + password, enroll in courses, and join live video sessions from their personal dashboard. Teacher manages everything via a hidden admin panel. Video calls are embedded directly inside the site via Jitsi Meet (no external apps needed).
-
-**Live URL:** https://mohammedcourses.vercel.app  
-**GitHub:** https://github.com/SherifAsh93/mr-mohammed  
-**Local:** `/home/sherif/sites/mr-mohammed`  
-**Stack:** Next.js 16.2.10 (Turbopack) · TypeScript · Tailwind CSS 4 · Neon PostgreSQL · Drizzle ORM · bcryptjs · jose (JWT)  
-**Deploy:** Push to GitHub → Vercel auto-deploys  
-**Admin access:** Triple-click the logo → password: `123456` (stored in `sessionStorage`)  
-**Student auth:** Phone + password → JWT in httpOnly cookie `student_token` (30-day)  
-**Video calls:** Jitsi Meet embedded via External API iframe (`components/JitsiSession.tsx`)
+- **Live URL:** https://mohammedcourses.vercel.app
+- **GitHub:** https://github.com/SherifAsh93/mr-mohammed
+- **Local path:** `/home/sherif/sites/mr-mohammed`
+- **Deployment:** Vercel (auto-deploys on push to `main`)
+- **Language:** Arabic, RTL layout
 
 ---
 
-## Structure
+## Features
+
+### Student-facing
+- **Home page** — teacher intro, quick nav tabs, always-visible step-by-step enrollment guide
+- **Courses page** — browse course cards with subject, schedule, price; enroll inline with Vodafone Cash payment reference
+- **Student registration** — phone + password; account stays pending until admin approval
+- **Student login** — JWT httpOnly cookie, 30-day session
+- **Student dashboard** — shows only confirmed enrollments; lists sessions with "Join Session" button; materials tab with downloadable links/PDFs
+- **Materials page** — publicly visible study materials grouped by subject
+- **Contact page** — WhatsApp and direct phone links (01007050667)
+- **PWA** — installable via `manifest.json`, Apple Web App meta, bottom nav bar, Cairo Arabic font
+
+### Admin-facing (hidden panel)
+- **Access:** Triple-click site logo → password modal → `sessionStorage` token
+- **Admin dashboard** — live counts of courses, enrollments, materials, results; quick-action links; teacher workflow guide
+- **Courses CRUD** — create/edit/delete courses with title, subject, schedule text, price, max students, status (`open`/`upcoming`/`closed`)
+- **Sessions panel** — per-course sessions with auto-generated Jitsi room names; date+time picker; "Start Session Now" Jitsi button for teacher; recorded video URL field
+- **Students management** — approve/reject student accounts
+- **Enrollments viewer** — see all enrollments with payment receipt; approve/cancel
+- **Attendance tracking** — per-session attendance marking (present/absent)
+- **Materials CRUD** — add/edit/delete links, PDFs, video materials by subject
+- **Exam results** — add/edit/delete student results with score and max score
+- **Settings** — change admin password (bcrypt stored in DB)
+
+### Live Video (Jitsi)
+- Teacher opens "Start Session Now" → Jitsi opens fullscreen inside the admin
+- Students open "Join Session" → same Jitsi room opens fullscreen inside the dashboard
+- Room names auto-generated server-side (`mrm-{random}`) — no external app needed
+- Lobby disabled so students enter directly after teacher starts
+- `knockingParticipant` event auto-admits waiting students (safety net)
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16.2.10 (App Router, Turbopack) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4, Cairo Google Font (Arabic + Latin) |
+| Database | Neon PostgreSQL (serverless) |
+| ORM | Drizzle ORM 0.45 + drizzle-kit |
+| Auth (admin) | bcryptjs password check → `randomUUID()` token in `sessionStorage` |
+| Auth (student) | jose JWT (HS256) → httpOnly cookie `student_token` (30d) |
+| Video calls | Jitsi Meet External API (public `meet.jit.si`) |
+| Hosting | Vercel |
+| PWA | Web app manifest + Apple meta tags |
+
+---
+
+## Folder Structure
 
 ```
 mr-mohammed/
 ├── app/
-│   ├── layout.tsx              # Root layout — Cairo font, RTL, PWA meta
-│   ├── page.tsx                # Home page — teacher intro + always-visible student guide
-│   ├── globals.css             # Tailwind + glass effects + slide-up animation
+│   ├── layout.tsx              # Root — Cairo font, lang="ar" dir="rtl", BottomNav
+│   ├── page.tsx                # Home — teacher intro, quick tabs, enrollment guide
+│   ├── globals.css             # Tailwind base + glass effects + slide-up animation
 │   ├── courses/page.tsx        # Course listing + enrollment form + Vodafone Cash box
-│   ├── materials/page.tsx      # Study materials by subject
-│   ├── contact/page.tsx        # WhatsApp + phone links (01007050667)
-│   ├── dashboard/page.tsx      # Student dashboard — enrolled courses + sessions + join button
+│   ├── materials/page.tsx      # Public study materials by subject
+│   ├── contact/page.tsx        # WhatsApp + phone (01007050667)
 │   ├── login/page.tsx          # Student login (phone + password)
+│   ├── register/page.tsx       # Student self-registration
+│   ├── results/page.tsx        # Student results lookup
+│   ├── dashboard/page.tsx      # Student dashboard — courses, sessions, materials
 │   ├── admin/
-│   │   ├── layout.tsx          # Admin shell — sidebar nav + mobile hamburger
-│   │   ├── page.tsx            # Admin dashboard overview + teacher guide
-│   │   ├── courses/page.tsx    # Courses CRUD + sessions panel + "Start Now" Jitsi button
-│   │   ├── students/page.tsx   # Student management (approve/reject)
-│   │   ├── enrollments/page.tsx# Enrollment viewer + payment receipt status
-│   │   ├── attendance/page.tsx # Attendance tracking per session
+│   │   ├── layout.tsx          # Admin shell — sidebar nav (desktop) + hamburger (mobile)
+│   │   ├── page.tsx            # Admin overview — stats + quick actions + teacher guide
+│   │   ├── courses/page.tsx    # Courses CRUD + sessions panel + Jitsi start button
+│   │   ├── students/page.tsx   # Student approval / rejection
+│   │   ├── enrollments/page.tsx# Enrollment viewer + payment receipt
+│   │   ├── attendance/page.tsx # Attendance marking per session
 │   │   ├── materials/page.tsx  # Materials CRUD
-│   │   └── settings/page.tsx   # Admin settings
+│   │   ├── results/page.tsx    # Exam results CRUD
+│   │   └── settings/page.tsx   # Admin password change
 │   └── api/
-│       ├── seed/route.ts       # DB migration + seed (run once via GET /api/seed)
-│       ├── auth/route.ts       # POST — bcrypt password check → token
-│       ├── courses/
-│       │   ├── route.ts        # GET all / POST new
-│       │   └── [id]/route.ts   # PUT / DELETE
-│       ├── sessions/
-│       │   ├── route.ts        # GET ?courseId=X / POST new (auto-generates room name)
-│       │   └── [id]/route.ts   # DELETE
-│       ├── enrollments/
-│       │   ├── route.ts        # GET all / POST new enrollment
-│       │   └── [id]/route.ts   # PATCH status / DELETE
-│       ├── materials/
-│       │   ├── route.ts        # GET all / POST new
-│       │   └── [id]/route.ts   # PUT / DELETE
-│       ├── student/
-│       │   ├── login/route.ts  # Student login → JWT cookie
-│       │   ├── logout/route.ts # Clear cookie
-│       │   └── dashboard/route.ts # Auth-gated: return student + courses + sessions
-│       └── attendance/route.ts # Attendance CRUD
+│       ├── auth/login/route.ts # POST — bcrypt check → UUID token
+│       ├── courses/route.ts    # GET all / POST new
+│       ├── courses/[id]/route.ts # PUT / DELETE
+│       ├── sessions/route.ts   # GET ?courseId=X / POST new (auto room name)
+│       ├── sessions/[id]/route.ts # DELETE
+│       ├── enrollments/route.ts # GET all / POST new
+│       ├── enrollments/[id]/route.ts # PATCH status / DELETE
+│       ├── materials/route.ts  # GET all / POST new
+│       ├── materials/[id]/route.ts # PUT / DELETE
+│       ├── results/route.ts    # GET all / POST new
+│       ├── results/[id]/route.ts # PUT / DELETE
+│       ├── attendance/route.ts # Attendance CRUD
+│       ├── settings/route.ts   # GET/PUT admin password
+│       ├── users/route.ts      # Student user management
+│       ├── student/login/route.ts    # Student login → JWT cookie
+│       ├── student/logout/route.ts   # Clear cookie
+│       ├── student/register/route.ts # Student registration
+│       ├── student/me/route.ts       # Auth-gated: current student
+│       ├── student/dashboard/route.ts # Auth-gated: courses + sessions + materials
+│       └── seed/route.ts       # GET — create tables + seed default password (run once)
 ├── components/
-│   ├── Header.tsx              # Back-arrow header with title
-│   ├── BottomNav.tsx           # PWA bottom navigation (Home, Courses, دروسي, Materials, Contact)
-│   └── JitsiSession.tsx        # Jitsi Meet iframe embed (External API, configOverwrite)
+│   ├── Header.tsx              # Sticky header with AdminTrigger logo
+│   ├── AdminTrigger.tsx        # Triple-click logo → password modal → admin redirect
+│   ├── BottomNav.tsx           # PWA bottom nav (Home, Courses, Dashboard, Materials, Contact)
+│   └── JitsiSession.tsx        # Jitsi Meet iframe via External API
 ├── db/
-│   ├── schema.ts               # All tables (prefixed mrm_)
+│   ├── schema.ts               # All Drizzle table definitions (prefixed mrm_)
 │   └── index.ts                # Neon + Drizzle client
-├── public/                     # PWA icons, manifest
-├── middleware.ts               # Route protection
+├── lib/
+│   └── auth-student.ts         # JWT sign/verify helpers + cookie utilities
+├── public/
+│   ├── manifest.json           # PWA manifest
+│   └── icons/                  # icon-192.png, icon-512.png
+├── middleware.ts               # Protects /dashboard — redirects to /login if no valid JWT
+├── drizzle.config.ts           # Drizzle Kit config (reads .env.local)
+├── next.config.ts              # serverActions bodySizeLimit: 2mb
 ├── vercel.json                 # alias: mohammedcourses.vercel.app
 └── package.json
 ```
 
 ---
 
-## DB Schema (all tables prefixed `mrm_`)
+## Database
+
+**Provider:** Neon PostgreSQL (serverless). All tables prefixed `mrm_` to avoid conflicts on shared DB.
 
 ### `mrm_admin_settings`
 | Column | Type | Notes |
 |--------|------|-------|
-| key | varchar PK | e.g. `"password"` |
+| key | varchar(100) PK | e.g. `"admin_password"` |
 | value | text | bcrypt hash |
-| updated_at | timestamp | |
+| updated_at | timestamp | auto |
+
+### `mrm_users` (students)
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial PK | |
+| name | varchar(255) | |
+| phone | varchar(30) | unique login identifier |
+| password_hash | varchar(255) | bcrypt |
+| status | varchar(20) | `active` (default) |
+| created_at | timestamp | |
 
 ### `mrm_courses`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | serial PK | |
 | title | varchar(255) | |
-| description | text | |
+| description | text | nullable |
 | subject | varchar(100) | e.g. اللغة العربية / التربية الإسلامية |
 | schedule_text | varchar(255) | Free-form e.g. "السبت 8 مساءً" |
 | status | varchar(20) | `open` / `upcoming` / `closed` |
@@ -98,28 +166,21 @@ mr-mohammed/
 | Column | Type | Notes |
 |--------|------|-------|
 | id | serial PK | |
-| course_id | integer FK → mrm_courses.id | |
+| course_id | integer FK | → mrm_courses.id |
 | title | varchar(255) | Free-form label |
-| meeting_link | text | Auto-generated: `mrm-{random}` — used as Jitsi room name |
-| scheduled_at | timestamp | nullable — set by teacher via date+time picker |
-| created_at | timestamp | |
-
-### `mrm_students`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | serial PK | |
-| name | varchar(255) | |
-| phone | varchar(30) | unique login identifier |
-| password_hash | text | bcrypt |
-| status | varchar(20) | `pending` / `active` / `blocked` |
+| meeting_link | text | Auto-generated `mrm-{random}` — Jitsi room name |
+| scheduled_at | timestamp | nullable |
+| recorded_url | text | YouTube link after session |
 | created_at | timestamp | |
 
 ### `mrm_enrollments`
 | Column | Type | Notes |
 |--------|------|-------|
 | id | serial PK | |
-| course_id | integer FK → mrm_courses.id | |
-| student_id | integer FK → mrm_students.id | |
+| course_id | integer FK | → mrm_courses.id |
+| user_id | integer | nullable FK |
+| student_name | varchar(255) | denormalized |
+| student_phone | varchar(30) | |
 | payment_ref | varchar(100) | Vodafone Cash receipt (optional) |
 | status | varchar(20) | `pending` / `confirmed` / `cancelled` |
 | created_at | timestamp | |
@@ -129,97 +190,176 @@ mr-mohammed/
 |--------|------|-------|
 | id | serial PK | |
 | title | varchar(255) | |
-| description | text | |
+| description | text | nullable |
 | subject | varchar(100) | |
 | type | varchar(50) | `link` / `pdf` / `video` |
 | url | text | |
 | created_at | timestamp | |
 
----
+### `mrm_results`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial PK | |
+| student_name | varchar(255) | |
+| student_code | varchar(50) | nullable |
+| subject | varchar(100) | |
+| exam_name | varchar(255) | |
+| score | decimal(5,2) | |
+| max_score | decimal(5,2) | default 100 |
+| created_at | timestamp | |
 
-## Routes
-
-| Route | Purpose |
-|-------|---------|
-| `/` | Home — teacher intro, quick tabs, always-visible student guide |
-| `/courses` | Course cards + enrollment form + Vodafone Cash box |
-| `/materials` | Study materials filtered by subject |
-| `/contact` | WhatsApp + phone (01007050667) |
-| `/login` | Student login (phone + password) |
-| `/dashboard` | Student dashboard — enrolled courses, sessions, "🎥 دخول الحصة" button |
-| `/admin` | Hidden — triple-click logo to reveal password prompt |
-| `/admin/courses` | Course CRUD + sessions (date/time picker) + "▶ ابدأ الحصة الآن" Jitsi button |
-| `/admin/students` | Student approval/rejection |
-| `/admin/enrollments` | View enrollments + payment receipt status |
-| `/admin/attendance` | Attendance tracking |
-| `/admin/materials` | Material CRUD |
-| `/admin/settings` | Admin settings |
-| `/api/seed` | GET — runs all migrations + seeds default password |
-
----
-
-## Key Features
-
-### Live Video Sessions (Jitsi)
-- Teacher clicks "▶ ابدأ الحصة الآن" → Jitsi opens fullscreen inside the site
-- Student clicks "🎥 دخول الحصة" → same Jitsi room opens fullscreen
-- Room name is auto-generated server-side (`mrm-{random}`) — teacher never sees or touches a link
-- Jitsi embedded via `JitsiMeetExternalAPI` (External API from `meet.jit.si/external_api.js`)
-- `configOverwrite: { prejoinPageEnabled: false }` disables pre-join/lobby
-- Teacher shown as "الأستاذ محمد", student shown with their actual name
-
-### Admin auth
-- Triple-click logo on any `/admin/*` page → password modal appears
-- Token stored in `sessionStorage` — clears on tab close
-
-### Student auth
-- Register via course enrollment form → admin approves account
-- Login at `/login` → JWT in httpOnly cookie (30-day)
-- Dashboard shows only confirmed enrollments and their sessions
-
-### Vodafone Cash enrollment
-- When a course has a price: "حوّل X جنيه على فودافون كاش: 01007050667"
-- Optional receipt number field (`payment_ref`)
-
-### Guides
-- Teacher guide: always visible on admin pages (amber box, non-collapsible)
-- Student guide: always visible on home page and dashboard (blue box, non-collapsible)
+### `mrm_attendance`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | serial PK | |
+| session_id | integer FK | |
+| enrollment_id | integer FK | |
+| status | varchar(20) | `present` / `absent` |
+| created_at | timestamp | |
+| — | unique | (session_id, enrollment_id) |
 
 ---
 
-## How to Deploy
+## Environment Variables
 
-Push to GitHub → Vercel auto-deploys (no manual `vercel --prod` needed).
+Names only — set in Vercel dashboard (never committed to git):
 
-**Required env var (Vercel dashboard):**
-- `DATABASE_URL` — Neon PostgreSQL connection string
-
-**After first deploy:** Visit `GET /api/seed` once to create tables and seed the default password.
-
----
-
-## How to Continue
-
-- **Change admin password:** Update via admin settings or run SQL: `UPDATE mrm_admin_settings SET value = '$2b$...' WHERE key = 'password'`
-- **Add a subject:** Update the `SUBJECTS` array in `app/admin/courses/page.tsx`
-- **Change phone/WhatsApp:** `app/contact/page.tsx` and `app/courses/page.tsx`
-- **DB direct access:** Neon console or `psql $DATABASE_URL`
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | Neon PostgreSQL connection string |
+| `STUDENT_JWT_SECRET` | Yes | Secret for signing student JWT tokens (falls back to insecure dev string if unset) |
+| `NEXT_PUBLIC_SITE_URL` | No | Used in metadata for canonical URL (defaults to `https://mr-mohammed-gamma.vercel.app`) |
 
 ---
 
-## Audit Status — 2026-07-23 ✓
+## Local Development
 
-| Page | Mobile | Desktop | Arabic RTL | Notes |
-|------|--------|---------|-----------|-------|
-| Home | ✓ | ✓ | ✓ | Always-visible student guide |
-| Courses + Enrollment | ✓ | ✓ | ✓ | |
-| Materials | ✓ | ✓ | ✓ | |
-| Contact | ✓ | ✓ | ✓ | |
-| Student Login | ✓ | ✓ | ✓ | |
-| Student Dashboard | ✓ | ✓ | ✓ | Jitsi join button |
-| Admin — Overview | ✓ | ✓ | ✓ | Teacher guide |
-| Admin — Courses + Sessions | ✓ | ✓ | ✓ | Date/time picker + Jitsi start |
-| Admin — Students | ✓ | ✓ | ✓ | |
-| Admin — Enrollments | ✓ | ✓ | ✓ | |
-| Admin — Attendance | ✓ | ✓ | ✓ | |
-| Admin — Materials | ✓ | ✓ | ✓ | |
+```bash
+# 1. Clone
+git clone https://github.com/SherifAsh93/mr-mohammed
+cd mr-mohammed
+
+# 2. Install
+npm install
+
+# 3. Set environment
+cp .env.local.example .env.local  # or create manually
+# Add: DATABASE_URL=... and STUDENT_JWT_SECRET=...
+
+# 4. Run dev server
+npm run dev
+# Runs on http://localhost:3000
+
+# 5. First-time DB setup (once only)
+# Visit: http://localhost:3000/api/seed
+# This creates all tables and seeds the default admin password
+
+# 6. Run production build check
+npm run build
+```
+
+### Drizzle migrations (if needed)
+```bash
+npx drizzle-kit generate
+npx drizzle-kit push
+```
+
+---
+
+## Deployment
+
+- **Method:** Push to `main` → Vercel auto-deploys (no manual deploy command needed)
+- **Platform:** Vercel
+- **Alias:** `mohammedcourses.vercel.app` (set in `vercel.json`)
+- **Build command:** `next build` (Turbopack)
+- **Node version:** 20+
+
+### First deploy steps
+1. Add `DATABASE_URL` and `STUDENT_JWT_SECRET` in Vercel dashboard → Settings → Environment Variables
+2. Push to main to trigger deploy
+3. Visit `https://mohammedcourses.vercel.app/api/seed` once to initialize the database
+4. Log in via triple-click logo and change password from Settings
+
+---
+
+## Current Status
+
+**LIVE and in production** as of 2026-07-24.
+
+- All pages functional (home, courses, materials, contact, login, dashboard)
+- Admin panel fully operational (courses, sessions, students, enrollments, attendance, materials, results, settings)
+- Jitsi Meet integration working — lobby disabled, auto-admit enabled
+- PWA installable on mobile
+- Build: passing clean (Next.js 16.2.10, Turbopack, exit code 0)
+- One deprecation warning: `middleware` file convention deprecated in Next.js 16 — should migrate to `proxy` convention (non-blocking for now)
+
+---
+
+## Known Issues
+
+1. **Middleware deprecation warning** — Next.js 16 deprecates the `middleware.ts` file convention in favor of `proxy`. The current middleware (`/dashboard` route protection) still works but shows a build warning. Migrate when convenient.
+2. **Admin token is UUID, not JWT** — `sessionStorage` stores a UUID returned by `/api/auth/login`. This token is not verified server-side on subsequent admin API requests (admin APIs rely on client-side `sessionStorage` check). Fine for a single-teacher use case, but not scalable.
+3. **Student `user_id` in enrollments is nullable** — enrollments can exist without a linked `mrm_users` record (when enrolled without creating an account first). This dual-path works but adds complexity.
+4. **No rate limiting** on login endpoints — brute force is possible. Low risk given audience size.
+
+---
+
+## Future Improvements
+
+- Migrate `middleware.ts` → `proxy.ts` per Next.js 16 convention
+- Add server-side admin token verification (store sessions in DB or use signed JWT)
+- Add push notifications for session start
+- Add recorded video embed on student dashboard once `recorded_url` is set
+- Student password reset via phone verification (currently requires admin to reset)
+- Email/SMS notification on enrollment approval
+- Pagination for admin tables (enrollments, results) as data grows
+
+---
+
+## Reusable Assets
+
+The following components and patterns from this project are reusable in future projects:
+
+| Asset | Location | Description |
+|-------|----------|-------------|
+| `AdminTrigger` | `components/AdminTrigger.tsx` | Hidden admin access via N-click pattern with password modal |
+| `JitsiSession` | `components/JitsiSession.tsx` | Full Jitsi Meet embed with lobby disable + auto-admit |
+| `BottomNav` | `components/BottomNav.tsx` | PWA bottom navigation bar with active state icons |
+| `auth-student.ts` | `lib/auth-student.ts` | Complete JWT student auth: sign, verify, cookie helpers |
+| DB schema pattern | `db/schema.ts` | Table prefix strategy (`mrm_`) for shared Neon DBs |
+| Arabic RTL layout | `app/layout.tsx` | Cairo font + `lang="ar" dir="rtl"` + PWA meta |
+| Vodafone Cash enrollment flow | `app/courses/page.tsx` | Payment-ref-based enrollment for Egyptian cash payments |
+
+---
+
+## Lessons Learned
+
+- **Jitsi lobby must be disabled proactively** — `prejoinPageEnabled: false` alone is not enough; teacher must also run `toggleLobby(false)` on `videoConferenceJoined` and listen for `knockingParticipant` to auto-admit students who arrive before the toggle fires.
+- **Triple-click with timeout** — the 1500ms reset timer on `clickCountRef` prevents accidental triggers when the logo is tapped quickly for other reasons.
+- **Neon + Drizzle on serverless** — use `neon-http` transport (not `neon-serverless` websocket) for Vercel Functions; avoids cold-start connection issues.
+- **Cairo font Arabic subset** — include both `arabic` and `latin` subsets; Latin numbers appear in phone numbers and dates.
+- **`sessionStorage` for admin** — intentional: admin session dies on tab close, adding implicit security for a shared-device scenario.
+- **`/api/seed` for DB init** — avoids needing CLI access to Neon console on first deploy; teacher can just visit a URL.
+
+---
+
+## WebistryDev Metadata
+
+```yaml
+Category: Education / Teacher Portal
+Complexity: Medium
+Template Candidate: Yes
+Priority: Maintenance
+Reusable Modules:
+  - Hidden admin trigger (N-click pattern)
+  - Jitsi Meet embedded video sessions
+  - PWA bottom navigation (Arabic RTL)
+  - Student JWT auth with httpOnly cookie
+  - Vodafone Cash enrollment flow
+  - Cairo Arabic font layout
+  - Drizzle ORM + Neon serverless setup
+Similar Projects:
+  - /home/sherif/sites/zahrtelkhlig  (Vercel + Neon ecommerce, same stack)
+  - /home/sherif/sites/Montelle      (Vercel + Neon bridal ecommerce, same stack)
+  - /home/sherif/sites/Qoya Furniture (Vercel + Neon furniture, same stack)
+```
